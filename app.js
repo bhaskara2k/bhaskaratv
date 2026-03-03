@@ -70,6 +70,16 @@ document.addEventListener('DOMContentLoaded', () => {
         return `${year}-${month}-${day}`;
     }
 
+    // Helper to normalize dates for comparison (handles both YYYY-MM-DD and YYYY-M-D)
+    function normalizeDate(d) {
+        if (!d) return null;
+        try {
+            const parts = d.split('-');
+            if (parts.length !== 3) return d;
+            return `${parts[0]}-${parts[1].padStart(2, '0')}-${parts[2].padStart(2, '0')}`;
+        } catch (e) { return d; }
+    }
+
     // Initialize the app
     async function init() {
         console.log("LOG: Iniciando BhaskaraTV Cloud...");
@@ -475,16 +485,23 @@ document.addEventListener('DOMContentLoaded', () => {
         const currentMinute = now.getMinutes();
         const currentTimeInSeconds = (currentHour * 3600) + (currentMinute * 60);
 
-        console.log(`LOG: Renderizando grade para o dia local ${todayStr} (Dia ${currentDay})`);
+        console.log(`[DEBUG] Renderizando Grade. Hoje: ${todayStr}, Dia Semana: ${currentDay}`);
 
         const todaysSchedule = schedule
             .filter(prog => {
-                if (prog.date) return prog.date === todayStr;
+                const progDate = normalizeDate(prog.date);
+                if (progDate) {
+                    const match = progDate === todayStr;
+                    if (prog.title.toLowerCase().includes('hunter')) {
+                        console.log(`[DEBUG] Hunter Match: ${progDate} === ${todayStr} ? ${match}`);
+                    }
+                    return match;
+                }
                 return prog.days && prog.days.includes(currentDay);
             })
             .sort((a, b) => a.startTime.localeCompare(b.startTime));
 
-        console.log(`LOG: Encontrados ${todaysSchedule.length} programas para hoje.`);
+        console.log(`[DEBUG] Programas filtrados para hoje:`, todaysSchedule.map(p => p.title));
 
         if (currentDayElement) {
             currentDayElement.textContent = daysWeek[now.getDay()];
@@ -688,20 +705,19 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
 
-        // Calcular a data correspondente a este dia da semana (na semana atual)
-        // Isso permite que programas com data específica apareçam na aba do dia correspondente
         const diff = day - now.getDay();
         const targetDate = new Date(now);
         targetDate.setDate(now.getDate() + diff);
         const targetDateStr = `${targetDate.getFullYear()}-${String(targetDate.getMonth() + 1).padStart(2, '0')}-${String(targetDate.getDate()).padStart(2, '0')}`;
 
+        console.log(`[DEBUG] Grade Semanal: Aba ${day}, Data Alvo: ${targetDateStr}`);
+
         const daySchedule = schedule
             .filter(prog => {
-                // Se o programa tem uma data específica, mostramos APENAS no dia exato
-                if (prog.date) {
-                    return prog.date === targetDateStr;
+                const progDate = normalizeDate(prog.date);
+                if (progDate) {
+                    return progDate === targetDateStr;
                 }
-                // Programas recorrentes que passam neste dia da semana
                 return prog.days && prog.days.includes(day);
             })
             .sort((a, b) => a.startTime.localeCompare(b.startTime));
