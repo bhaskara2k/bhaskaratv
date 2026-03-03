@@ -202,7 +202,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const dateDisplay = prog.date ? `
                 <span class="text-[10px] font-black px-3 py-1.5 rounded-full bg-amber-500/10 text-amber-500 border border-amber-500/20 uppercase tracking-widest flex items-center gap-1">
                     <svg class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
-                    DATA: ${formatDate(prog.date)}
+                    DATA: ${formatDateWithDay(prog.date)}
                 </span>` : `
                 <span class="text-[10px] font-black px-3 py-1.5 rounded-full bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 uppercase tracking-widest">${activeDays}</span>`;
 
@@ -253,10 +253,13 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    function formatDate(dateStr) {
+    function formatDateWithDay(dateStr) {
         if (!dateStr) return '';
+        const date = new Date(dateStr + 'T12:00:00'); // T12:00:00 evita erros de fuso horário
+        const days = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];
+        const dayName = days[date.getDay()];
         const [year, month, day] = dateStr.split('-');
-        return `${day}/${month}/${year}`;
+        return `${day}/${month} (${dayName})`;
     }
 
     function renderCatalog() {
@@ -427,5 +430,22 @@ document.addEventListener('DOMContentLoaded', () => {
         catalogForm.reset();
         document.getElementById('btn-submit-catalog').textContent = 'Adicionar Destaque';
         document.getElementById('btn-cancel-edit-catalog').classList.add('hidden');
+    });
+
+    // Listener para mostrar o dia da semana no formulário
+    document.getElementById('prog-date').addEventListener('input', (e) => {
+        const dateVal = e.target.value;
+        const hint = e.target.nextElementSibling;
+        if (dateVal) {
+            const date = new Date(dateVal + 'T12:00:00');
+            const days = ['Domingo', 'Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'Sábado'];
+            hint.textContent = `Isso cai em uma ${days[date.getDay()]}.`;
+            hint.classList.remove('opacity-30');
+            hint.classList.add('text-indigo-400', 'font-bold');
+        } else {
+            hint.textContent = `Se definir uma data, os dias da semana abaixo serão ignorados para este programa.`;
+            hint.classList.remove('text-indigo-400', 'font-bold');
+            hint.classList.add('opacity-30');
+        }
     });
 });
