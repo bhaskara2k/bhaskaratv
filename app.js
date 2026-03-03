@@ -801,16 +801,18 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- LÓGICA DE AUTO-HIDE (INATIVIDADE) ---
     let idleTimer;
     const hideDelay = 3000; // 3 segundos
+    const root = document.documentElement;
 
     function resetIdleTimer() {
-        document.body.classList.remove('user-inactive');
+        root.classList.remove('user-inactive');
         clearTimeout(idleTimer);
 
         idleTimer = setTimeout(() => {
             // Só esconde se o mouse não estiver em cima de algum modal ou menu
-            const isMenuOpen = !catalogModal.classList.contains('opacity-0') || !fullScheduleModal.classList.contains('opacity-0');
+            const isMenuOpen = (catalogModal && !catalogModal.classList.contains('opacity-0')) ||
+                (fullScheduleModal && !fullScheduleModal.classList.contains('opacity-0'));
             if (!isMenuOpen) {
-                document.body.classList.add('user-inactive');
+                root.classList.add('user-inactive');
             }
         }, hideDelay);
     }
