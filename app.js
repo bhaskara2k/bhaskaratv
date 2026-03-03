@@ -62,6 +62,14 @@ document.addEventListener('DOMContentLoaded', () => {
         'Quinta-feira', 'Sexta-feira', 'Sábado'
     ];
 
+    function getTodayStr() {
+        const now = new Date();
+        const year = now.getFullYear();
+        const month = String(now.getMonth() + 1).padStart(2, '0');
+        const day = String(now.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+    }
+
     // Initialize the app
     async function init() {
         console.log("LOG: Iniciando BhaskaraTV Cloud...");
@@ -137,17 +145,14 @@ document.addEventListener('DOMContentLoaded', () => {
             const currentMinute = now.getMinutes();
             const currentSecond = now.getSeconds();
             const currentDay = now.getDay();
-
             const currentTimeInSeconds = (currentHour * 3600) + (currentMinute * 60) + currentSecond;
 
             // Find the matching program for today
+            const todayStr = getTodayStr();
             const activeProgram = schedule.find(prog => {
-                // Se o programa tem uma data específica, checagem por data
                 if (prog.date) {
-                    const todayStr = now.toISOString().split('T')[0];
                     if (prog.date !== todayStr) return false;
                 } else {
-                    // Caso contrário, checagem por dia da semana
                     if (!prog.days.includes(currentDay)) return false;
                 }
 
@@ -361,7 +366,7 @@ document.addEventListener('DOMContentLoaded', () => {
             .filter(p => {
                 const pDays = p.days || [];
                 const pDate = p.date || null;
-                const todayStr = now.toISOString().split('T')[0];
+                const todayStr = getTodayStr();
                 if (pDate) return pDate === todayStr;
                 return pDays.includes(now.getDay());
             })
@@ -391,7 +396,7 @@ document.addEventListener('DOMContentLoaded', () => {
             .filter(p => {
                 const pDays = p.days || [];
                 const pDate = p.date || null;
-                const todayStr = now.toISOString().split('T')[0];
+                const todayStr = getTodayStr();
 
                 if (pDate) return pDate === todayStr;
                 return pDays.includes(now.getDay());
@@ -462,20 +467,24 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function renderSchedule() {
-        if (!fullScheduleList) return;
+        if (!scheduleList) return;
         const now = new Date();
         const currentDay = now.getDay();
-        const todayStr = now.toISOString().split('T')[0];
+        const todayStr = getTodayStr();
         const currentHour = now.getHours();
         const currentMinute = now.getMinutes();
         const currentTimeInSeconds = (currentHour * 3600) + (currentMinute * 60);
 
+        console.log(`LOG: Renderizando grade para o dia local ${todayStr} (Dia ${currentDay})`);
+
         const todaysSchedule = schedule
             .filter(prog => {
                 if (prog.date) return prog.date === todayStr;
-                return prog.days.includes(currentDay);
+                return prog.days && prog.days.includes(currentDay);
             })
             .sort((a, b) => a.startTime.localeCompare(b.startTime));
+
+        console.log(`LOG: Encontrados ${todaysSchedule.length} programas para hoje.`);
 
         if (currentDayElement) {
             currentDayElement.textContent = daysWeek[now.getDay()];
@@ -679,8 +688,22 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
 
+        // Calcular a data correspondente a este dia da semana (na semana atual)
+        // Isso permite que programas com data específica apareçam na aba do dia correspondente
+        const diff = day - now.getDay();
+        const targetDate = new Date(now);
+        targetDate.setDate(now.getDate() + diff);
+        const targetDateStr = `${targetDate.getFullYear()}-${String(targetDate.getMonth() + 1).padStart(2, '0')}-${String(targetDate.getDate()).padStart(2, '0')}`;
+
         const daySchedule = schedule
-            .filter(prog => prog.days.includes(day))
+            .filter(prog => {
+                // Se o programa tem uma data específica, mostramos APENAS no dia exato
+                if (prog.date) {
+                    return prog.date === targetDateStr;
+                }
+                // Programas recorrentes que passam neste dia da semana
+                return prog.days && prog.days.includes(day);
+            })
             .sort((a, b) => a.startTime.localeCompare(b.startTime));
 
         fullScheduleContent.innerHTML = '';
