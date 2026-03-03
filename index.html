@@ -477,12 +477,14 @@
             top: 2rem;
             left: 2rem;
             right: 2rem;
-            display: none;
+            display: flex;
             justify-content: space-between;
             align-items: center;
             z-index: 100;
             pointer-events: none;
-            transition: opacity 0.5s ease;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.8s ease, visibility 0.8s ease;
         }
 
         .fullscreen-ui * {
@@ -490,7 +492,9 @@
         }
 
         :fullscreen .fullscreen-ui {
-            display: flex;
+            /* Só mostramos se não estiver inativo */
+            visibility: visible;
+            opacity: 1;
         }
 
         :fullscreen .tv-screen {
@@ -498,8 +502,9 @@
             border-radius: 0 !important;
         }
 
-        /* Auto-hide Logic (Universal) */
-        .user-inactive {
+        /* Auto-hide Logic (Forced) */
+        .user-inactive,
+        .user-inactive * {
             cursor: none !important;
         }
 
@@ -511,14 +516,6 @@
             opacity: 0 !important;
             visibility: hidden !important;
             pointer-events: none !important;
-        }
-
-        .fullscreen-ui,
-        .custom-controls,
-        .coming-next-toast,
-        #video-overlay,
-        .tv-header {
-            transition: opacity 1s ease, visibility 1s ease !important;
         }
     </style>
 </head>

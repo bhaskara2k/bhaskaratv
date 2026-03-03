@@ -820,10 +820,9 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Eventos para detectar atividade
-    window.addEventListener('mousemove', resetIdleTimer);
-    window.addEventListener('mousedown', resetIdleTimer);
-    window.addEventListener('keydown', resetIdleTimer);
-    window.addEventListener('touchstart', resetIdleTimer);
+    ['mousemove', 'mousedown', 'keydown', 'touchstart'].forEach(evt => {
+        document.addEventListener(evt, resetIdleTimer, { passive: true });
+    });
 
     // Iniciar timer
     resetIdleTimer();
