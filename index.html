@@ -163,15 +163,12 @@
         }
 
         .custom-controls {
-            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.3s ease;
-            transform: translateY(20px);
+            transition: transform 0.8s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.8s ease;
+            transform: translateY(0);
             z-index: 100 !important;
             pointer-events: auto;
-        }
-
-        .tv-screen:hover .custom-controls {
             opacity: 1;
-            transform: translateY(0);
+            /* Visível por padrão se não estiver inativo */
         }
 
         .coming-next-toast {
@@ -413,6 +410,7 @@
         /* Custom Volume Slider */
         input[type=range] {
             -webkit-appearance: none;
+            appearance: none;
             background: transparent;
         }
 
@@ -424,6 +422,7 @@
 
         input[type=range]::-webkit-slider-thumb {
             -webkit-appearance: none;
+            appearance: none;
             height: 12px;
             width: 12px;
             border-radius: 50%;
@@ -471,7 +470,6 @@
         }
 
         /* Fullscreen UI (Inside Player) */
-        /* Fullscreen UI (Inside Player) */
         .fullscreen-ui {
             position: absolute;
             top: 2rem;
@@ -482,8 +480,8 @@
             align-items: center;
             z-index: 100;
             pointer-events: none;
-            opacity: 0;
-            visibility: hidden;
+            opacity: 1;
+            visibility: visible;
             transition: opacity 0.8s ease, visibility 0.8s ease;
         }
 
@@ -491,10 +489,8 @@
             pointer-events: auto;
         }
 
-        :fullscreen .fullscreen-ui {
-            /* Só mostramos se não estiver inativo */
-            visibility: visible;
-            opacity: 1;
+        :not(:fullscreen) .fullscreen-ui {
+            display: none !important;
         }
 
         :fullscreen .tv-screen {
@@ -502,20 +498,30 @@
             border-radius: 0 !important;
         }
 
-        /* Auto-hide Logic (Forced) */
-        .user-inactive,
-        .user-inactive * {
+        /* NUCLEAR AUTO-HIDE LOGIC (Highest Priority) */
+        html[data-ui-hide="true"],
+        html[data-ui-hide="true"] * {
             cursor: none !important;
         }
 
-        .user-inactive .fullscreen-ui,
-        .user-inactive .custom-controls,
-        .user-inactive .coming-next-toast,
-        .user-inactive #video-overlay,
-        .user-inactive .tv-header {
+        html[data-ui-hide="true"] .fullscreen-ui,
+        html[data-ui-hide="true"] .custom-controls,
+        html[data-ui-hide="true"] .coming-next-toast,
+        html[data-ui-hide="true"] #video-overlay,
+        html[data-ui-hide="true"] .tv-header,
+        html[data-ui-hide="true"] .watermark {
             opacity: 0 !important;
             visibility: hidden !important;
             pointer-events: none !important;
+            transform: translateY(10px);
+        }
+
+        .tv-header,
+        .custom-controls,
+        .coming-next-toast,
+        #video-overlay,
+        .fullscreen-ui {
+            transition: opacity 0.8s ease, visibility 0.8s ease, transform 0.8s ease !important;
         }
     </style>
 </head>

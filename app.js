@@ -800,27 +800,28 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- LÓGICA DE AUTO-HIDE (INATIVIDADE) ---
     let idleTimer;
-    const hideDelay = 3000; // 3 segundos
-    const root = document.documentElement;
+    const hideDelay = 3000;
+    const rootNode = document.documentElement;
 
     function resetIdleTimer() {
-        root.classList.remove('user-inactive');
-        if (playerContainer) playerContainer.classList.remove('user-inactive');
+        // Remover sinal de inatividade
+        rootNode.setAttribute('data-ui-hide', 'false');
+
         clearTimeout(idleTimer);
 
         idleTimer = setTimeout(() => {
             // Só esconde se o mouse não estiver em cima de algum modal ou menu
             const isMenuOpen = (catalogModal && !catalogModal.classList.contains('opacity-0')) ||
                 (fullScheduleModal && !fullScheduleModal.classList.contains('opacity-0'));
+
             if (!isMenuOpen) {
-                root.classList.add('user-inactive');
-                if (playerContainer) playerContainer.classList.add('user-inactive');
+                rootNode.setAttribute('data-ui-hide', 'true');
             }
         }, hideDelay);
     }
 
-    // Eventos para detectar atividade
-    ['mousemove', 'mousedown', 'keydown', 'touchstart'].forEach(evt => {
+    // Monitorar em múltiplos níveis para garantir captura total (TV e PC)
+    ['mousemove', 'mousedown', 'keydown', 'touchstart', 'scroll', 'click'].forEach(evt => {
         document.addEventListener(evt, resetIdleTimer, { passive: true });
     });
 
