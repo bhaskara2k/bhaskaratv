@@ -498,16 +498,16 @@
             border-radius: 0 !important;
         }
 
-        /* Auto-hide Logic (Applied to HTML/DOM Root) */
-        html.user-inactive {
+        /* Auto-hide Logic (Universal) */
+        .user-inactive {
             cursor: none !important;
         }
 
-        html.user-inactive .fullscreen-ui,
-        html.user-inactive .custom-controls,
-        html.user-inactive .coming-next-toast,
-        html.user-inactive #video-overlay,
-        html.user-inactive .tv-header {
+        .user-inactive .fullscreen-ui,
+        .user-inactive .custom-controls,
+        .user-inactive .coming-next-toast,
+        .user-inactive #video-overlay,
+        .user-inactive .tv-header {
             opacity: 0 !important;
             visibility: hidden !important;
             pointer-events: none !important;
@@ -518,7 +518,7 @@
         .coming-next-toast,
         #video-overlay,
         .tv-header {
-            transition: opacity 0.8s ease, visibility 0.8s ease !important;
+            transition: opacity 1s ease, visibility 1s ease !important;
         }
     </style>
 </head>

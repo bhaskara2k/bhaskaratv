@@ -805,6 +805,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function resetIdleTimer() {
         root.classList.remove('user-inactive');
+        if (playerContainer) playerContainer.classList.remove('user-inactive');
         clearTimeout(idleTimer);
 
         idleTimer = setTimeout(() => {
@@ -813,6 +814,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 (fullScheduleModal && !fullScheduleModal.classList.contains('opacity-0'));
             if (!isMenuOpen) {
                 root.classList.add('user-inactive');
+                if (playerContainer) playerContainer.classList.add('user-inactive');
             }
         }, hideDelay);
     }
