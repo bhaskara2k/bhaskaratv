@@ -52,6 +52,11 @@ document.addEventListener('DOMContentLoaded', () => {
         catalog: []
     };
 
+    let editingIndex = {
+        schedule: -1,
+        catalog: -1
+    };
+
     // --- AUTENTICAÇÃO ---
     loginBtn.addEventListener('click', async () => {
         try {
@@ -181,8 +186,6 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        config.schedule.sort((a, b) => a.startTime.localeCompare(b.startTime));
-
         config.schedule.forEach((prog, index) => {
             const [h, m] = prog.startTime.split(':').map(Number);
             const startDate = new Date();
@@ -196,24 +199,36 @@ document.addEventListener('DOMContentLoaded', () => {
             const daysShort = ['DOM', 'SEG', 'TER', 'QUA', 'QUI', 'SEX', 'SAB'];
             const activeDays = prog.days.map(d => daysShort[d]).join(', ');
 
+            const dateDisplay = prog.date ? `
+                <span class="text-[10px] font-black px-3 py-1.5 rounded-full bg-amber-500/10 text-amber-500 border border-amber-500/20 uppercase tracking-widest flex items-center gap-1">
+                    <svg class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                    DATA: ${formatDate(prog.date)}
+                </span>` : `
+                <span class="text-[10px] font-black px-3 py-1.5 rounded-full bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 uppercase tracking-widest">${activeDays}</span>`;
+
             card.innerHTML = `
                 <div class="flex gap-8 items-center">
-                    <div class="text-3xl font-black text-indigo-500 bg-indigo-500/10 w-24 h-24 rounded-[1.5rem] flex flex-col items-center justify-center font-mono italic">
+                    <div class="text-3xl font-black text-indigo-500 bg-indigo-500/10 w-24 h-24 rounded-[1.5rem] flex flex-col items-center justify-center font-mono italic shrink-0">
                         <span class="text-[10px] opacity-40 not-italic uppercase tracking-widest mb-1">FIM ${endTimeStr}</span>
                         ${prog.startTime}
                     </div>
                     <div>
                         <h3 class="text-2xl font-black mb-1 uppercase italic tracking-tighter">${prog.title}</h3>
-                        <p class="text-sm text-indigo-300 opacity-60 mb-2 italic">${prog.description || 'Sem descrição'}</p>
-                        <div class="flex gap-3">
+                        <p class="text-sm text-indigo-300 opacity-60 mb-2 italic line-clamp-1">${prog.description || 'Sem descrição'}</p>
+                        <div class="flex gap-3 flex-wrap">
                              <span class="text-[10px] font-black px-3 py-1.5 rounded-full bg-white/5 border border-white/5 uppercase tracking-widest">${prog.duration} MIN</span>
-                             <span class="text-[10px] font-black px-3 py-1.5 rounded-full bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 uppercase tracking-widest">${activeDays}</span>
+                             ${dateDisplay}
                         </div>
                     </div>
                 </div>
-                <div class="flex gap-4">
-                    <button data-index="${index}" class="btn-remove-schedule p-6 rounded-3xl hover:bg-red-500/10 text-red-500 opacity-0 group-hover:opacity-100 transition-all">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <div class="flex gap-2">
+                    <button data-index="${index}" class="btn-edit-schedule p-4 rounded-2xl hover:bg-indigo-500/10 text-indigo-400 opacity-0 group-hover:opacity-100 transition-all" title="Editar">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                        </svg>
+                    </button>
+                    <button data-index="${index}" class="btn-remove-schedule p-4 rounded-2xl hover:bg-red-500/10 text-red-500 opacity-0 group-hover:opacity-100 transition-all" title="Remover">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                         </svg>
                     </button>
@@ -224,8 +239,24 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Add event listeners programmatically (Safe for CSP)
         document.querySelectorAll('.btn-remove-schedule').forEach(btn => {
-            btn.addEventListener('click', () => removeSchedule(btn.dataset.index));
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                removeSchedule(btn.dataset.index);
+            });
         });
+
+        document.querySelectorAll('.btn-edit-schedule').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                editSchedule(btn.dataset.index);
+            });
+        });
+    }
+
+    function formatDate(dateStr) {
+        if (!dateStr) return '';
+        const [year, month, day] = dateStr.split('-');
+        return `${day}/${month}/${year}`;
     }
 
     function renderCatalog() {
@@ -246,11 +277,18 @@ document.addEventListener('DOMContentLoaded', () => {
                         <span class="text-[10px] px-3 py-1 rounded-full bg-purple-500/20 text-purple-400 font-black uppercase tracking-widest">${item.type}</span>
                     </div>
                     <p class="text-sm opacity-50 line-clamp-2 mb-6 leading-relaxed">${item.description}</p>
-                    <button data-index="${index}" class="btn-remove-catalog absolute bottom-6 right-6 p-3 rounded-2xl bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white transition-all">
-                         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                        </svg>
-                    </button>
+                    <div class="flex gap-2 absolute bottom-6 right-6">
+                        <button data-index="${index}" class="btn-edit-catalog p-3 rounded-2xl bg-purple-500/10 text-purple-400 hover:bg-purple-500 hover:text-white transition-all" title="Editar">
+                             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                            </svg>
+                        </button>
+                        <button data-index="${index}" class="btn-remove-catalog p-3 rounded-2xl bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white transition-all" title="Remover">
+                             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                            </svg>
+                        </button>
+                    </div>
                 </div>
             `;
             catalogContainer.appendChild(card);
@@ -258,7 +296,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Add event listeners (Safe for CSP)
         document.querySelectorAll('.btn-remove-catalog').forEach(btn => {
-            btn.addEventListener('click', () => removeCatalog(btn.dataset.index));
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                removeCatalog(btn.dataset.index);
+            });
+        });
+
+        document.querySelectorAll('.btn-edit-catalog').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                editCatalog(btn.dataset.index);
+            });
         });
     }
 
@@ -279,29 +327,105 @@ document.addEventListener('DOMContentLoaded', () => {
     programForm.addEventListener('submit', (e) => {
         e.preventDefault();
         const selectedDays = Array.from(document.querySelectorAll('input[name="prog-days"]:checked')).map(cb => parseInt(cb.value));
-        if (selectedDays.length === 0) { alert("Selecione os dias da semana."); return; }
+        const specificDate = document.getElementById('prog-date').value;
 
-        config.schedule.push({
+        if (!specificDate && selectedDays.length === 0) {
+            alert("Selecione os dias da semana ou defina uma data específica.");
+            return;
+        }
+
+        const newProgram = {
             title: document.getElementById('prog-title').value,
             description: document.getElementById('prog-desc').value,
             url: document.getElementById('prog-url').value,
             startTime: document.getElementById('prog-start').value,
             duration: parseInt(document.getElementById('prog-duration').value),
-            days: selectedDays
-        });
+            days: specificDate ? [] : selectedDays,
+            date: specificDate || null
+        };
+
+        if (editingIndex.schedule >= 0) {
+            config.schedule[editingIndex.schedule] = newProgram;
+            editingIndex.schedule = -1;
+            document.getElementById('btn-submit-program').textContent = 'Adicionar à Grade';
+            document.getElementById('btn-cancel-edit-program').classList.add('hidden');
+        } else {
+            config.schedule.push(newProgram);
+        }
+
         renderSchedule();
         programForm.reset();
     });
 
     catalogForm.addEventListener('submit', (e) => {
         e.preventDefault();
-        config.catalog.push({
+        const newItem = {
             title: document.getElementById('cat-title').value,
             type: document.getElementById('cat-type').value,
             banner: document.getElementById('cat-banner').value,
             description: document.getElementById('cat-desc').value
-        });
+        };
+
+        if (editingIndex.catalog >= 0) {
+            config.catalog[editingIndex.catalog] = newItem;
+            editingIndex.catalog = -1;
+            document.getElementById('btn-submit-catalog').textContent = 'Adicionar Destaque';
+            document.getElementById('btn-cancel-edit-catalog').classList.add('hidden');
+        } else {
+            config.catalog.push(newItem);
+        }
+
         renderCatalog();
         catalogForm.reset();
+    });
+
+    // --- FORM ACTIONS ---
+    window.editSchedule = (index) => {
+        const prog = config.schedule[index];
+        editingIndex.schedule = parseInt(index);
+
+        document.getElementById('prog-title').value = prog.title;
+        document.getElementById('prog-desc').value = prog.description;
+        document.getElementById('prog-url').value = prog.url;
+        document.getElementById('prog-start').value = prog.startTime;
+        document.getElementById('prog-duration').value = prog.duration;
+        document.getElementById('prog-date').value = prog.date || '';
+
+        // Checkboxes
+        document.querySelectorAll('input[name="prog-days"]').forEach(cb => {
+            cb.checked = prog.days.includes(parseInt(cb.value));
+        });
+
+        document.getElementById('btn-submit-program').textContent = 'Atualizar Programa';
+        document.getElementById('btn-cancel-edit-program').classList.remove('hidden');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+
+    window.editCatalog = (index) => {
+        const item = config.catalog[index];
+        editingIndex.catalog = parseInt(index);
+
+        document.getElementById('cat-title').value = item.title;
+        document.getElementById('cat-type').value = item.type;
+        document.getElementById('cat-banner').value = item.banner;
+        document.getElementById('cat-desc').value = item.description;
+
+        document.getElementById('btn-submit-catalog').textContent = 'Atualizar Destaque';
+        document.getElementById('btn-cancel-edit-catalog').classList.remove('hidden');
+        window.scrollTo({ top: tabCatalog.offsetTop, behavior: 'smooth' });
+    };
+
+    document.getElementById('btn-cancel-edit-program').addEventListener('click', () => {
+        editingIndex.schedule = -1;
+        programForm.reset();
+        document.getElementById('btn-submit-program').textContent = 'Adicionar à Grade';
+        document.getElementById('btn-cancel-edit-program').classList.add('hidden');
+    });
+
+    document.getElementById('btn-cancel-edit-catalog').addEventListener('click', () => {
+        editingIndex.catalog = -1;
+        catalogForm.reset();
+        document.getElementById('btn-submit-catalog').textContent = 'Adicionar Destaque';
+        document.getElementById('btn-cancel-edit-catalog').classList.add('hidden');
     });
 });

@@ -142,7 +142,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // Find the matching program for today
             const activeProgram = schedule.find(prog => {
-                if (!prog.days.includes(currentDay)) return false;
+                // Se o programa tem uma data específica, checagem por data
+                if (prog.date) {
+                    const todayStr = now.toISOString().split('T')[0];
+                    if (prog.date !== todayStr) return false;
+                } else {
+                    // Caso contrário, checagem por dia da semana
+                    if (!prog.days.includes(currentDay)) return false;
+                }
 
                 const [startH, startM] = prog.startTime.split(':').map(Number);
                 const startInSeconds = (startH * 3600) + (startM * 60);
@@ -351,7 +358,13 @@ document.addEventListener('DOMContentLoaded', () => {
         const currentTimeInSeconds = (currentHour * 3600) + (currentMinute * 60) + currentSecond;
 
         const nextProg = schedule
-            .filter(p => p.days.includes(now.getDay()))
+            .filter(p => {
+                const pDays = p.days || [];
+                const pDate = p.date || null;
+                const todayStr = now.toISOString().split('T')[0];
+                if (pDate) return pDate === todayStr;
+                return pDays.includes(now.getDay());
+            })
             .sort((a, b) => a.startTime.localeCompare(b.startTime))
             .find(p => {
                 const [h, m] = p.startTime.split(':').map(Number);
@@ -375,7 +388,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Find the next program
         const nextProg = schedule
-            .filter(p => p.days.includes(now.getDay()))
+            .filter(p => {
+                const pDays = p.days || [];
+                const pDate = p.date || null;
+                const todayStr = now.toISOString().split('T')[0];
+
+                if (pDate) return pDate === todayStr;
+                return pDays.includes(now.getDay());
+            })
             .sort((a, b) => a.startTime.localeCompare(b.startTime))
             .find(p => {
                 const [h, m] = p.startTime.split(':').map(Number);
@@ -442,19 +462,24 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function renderSchedule() {
+        if (!fullScheduleList) return;
         const now = new Date();
         const currentDay = now.getDay();
+        const todayStr = now.toISOString().split('T')[0];
         const currentHour = now.getHours();
         const currentMinute = now.getMinutes();
         const currentTimeInSeconds = (currentHour * 3600) + (currentMinute * 60);
 
-        if (currentDayElement) {
-            currentDayElement.textContent = daysWeek[currentDay];
-        }
-
         const todaysSchedule = schedule
-            .filter(prog => prog.days.includes(currentDay))
+            .filter(prog => {
+                if (prog.date) return prog.date === todayStr;
+                return prog.days.includes(currentDay);
+            })
             .sort((a, b) => a.startTime.localeCompare(b.startTime));
+
+        if (currentDayElement) {
+            currentDayElement.textContent = daysWeek[now.getDay()];
+        }
 
         scheduleList.innerHTML = '';
 
