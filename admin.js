@@ -53,42 +53,72 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     // --- AUTENTICAÇÃO ---
-    loginBtn.addEventListener('click', () => {
-        const provider = new firebase.auth.GoogleAuthProvider();
-        auth.signInWithRedirect(provider);
+    loginBtn.addEventListener('click', async () => {
+        try {
+            loginBtn.textContent = "Abrindo Google...";
+            loginBtn.disabled = true;
+            const provider = new firebase.auth.GoogleAuthProvider();
+            await auth.signInWithRedirect(provider);
+        } catch (error) {
+            console.error("Erro ao iniciar login:", error);
+            authError.textContent = "Erro: " + error.message;
+            authError.classList.remove('hidden');
+            loginBtn.disabled = false;
+            loginBtn.textContent = "Entrar com Google";
+        }
     });
 
     logoutBtn.addEventListener('click', () => {
         auth.signOut().then(() => window.location.reload());
     });
 
-    auth.getRedirectResult().then(result => {
-        if (result.user) console.log("Redirect success:", result.user.email);
-    }).catch(error => {
-        console.error("Redirect error:", error);
-        authError.classList.remove('hidden');
-        authError.textContent = "Erro Firebase: " + error.code;
-    });
-
-    auth.onAuthStateChanged(user => {
-        console.log("OnAuthStateChanged:", user ? user.email : "Ninguém");
-        if (user) {
-            const isAuthorized = AUTHORIZED_EMAILS.some(e => e.toLowerCase() === user.email.toLowerCase());
-
-            if (isAuthorized) {
-                console.log("ACESSO AUTORIZADO");
-                loginOverlay.classList.add('hidden');
-                adminContent.classList.remove('hidden');
-                loadFromCloud();
-            } else {
-                console.error("ACESSO NEGADO:", user.email);
-                authError.classList.remove('hidden');
-                authError.innerHTML = `E-mail não autorizado:<br>${user.email}<br><button onclick="firebase.auth().signOut()" class="text-xs underline mt-2">Trocar de Conta</button>`;
-            }
-        } else {
+    // Função para verificar o estado da autorização
+    function checkUser(user) {
+        if (!user) {
+            console.log("AUTH: Nenhum usuário detectado.");
             loginOverlay.classList.remove('hidden');
             adminContent.classList.add('hidden');
+            return;
         }
+
+        console.log("AUTH: Usuário detectado ->", user.email);
+        const isAuthorized = AUTHORIZED_EMAILS.some(e => e.toLowerCase() === user.email.toLowerCase());
+
+        if (isAuthorized) {
+            console.log("AUTH: ACESSO PERMITIDO");
+            loginOverlay.classList.add('hidden');
+            adminContent.classList.remove('hidden');
+            loadFromCloud();
+        } else {
+            console.error("AUTH: ACESSO NEGADO para", user.email);
+            authError.classList.remove('hidden');
+            authError.innerHTML = `
+                <div class="text-red-500 font-bold mb-2">ACESSO NEGADO</div>
+                <div class="text-[10px] opacity-60 mb-4">${user.email} não tem permissão.</div>
+                <button id="btn-switch-account" class="text-xs underline text-indigo-400">Trocar de Conta</button>
+            `;
+            document.getElementById('btn-switch-account')?.addEventListener('click', () => {
+                auth.signOut().then(() => window.location.reload());
+            });
+        }
+    }
+
+    // Tentar processar o resultado do redirecionamento
+    auth.getRedirectResult().then(result => {
+        if (result.user) {
+            console.log("AUTH: Redirect capturado com sucesso.");
+            checkUser(result.user);
+        }
+    }).catch(error => {
+        console.error("AUTH: Erro no retorno do Google:", error);
+        authError.classList.remove('hidden');
+        authError.textContent = "Erro de Autenticação: " + error.message;
+    });
+
+    // Escutar mudanças de estado (Backup do Redirect)
+    auth.onAuthStateChanged(user => {
+        console.log("AUTH: Estado alterado.");
+        checkUser(user);
     });
 
     // --- FETCH DURATION LOGIC ---
