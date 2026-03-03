@@ -51,7 +51,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- AUTENTICAÇÃO ---
     loginBtn.addEventListener('click', () => {
         const provider = new firebase.auth.GoogleAuthProvider();
-        auth.signInWithPopup(provider);
+        auth.signInWithRedirect(provider);
     });
 
     logoutBtn.addEventListener('click', () => {
