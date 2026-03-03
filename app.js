@@ -798,10 +798,31 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // Iniciar foco no player para TVs
-    window.addEventListener('load', () => {
-        if (unmuteOverlay) unmuteOverlay.focus();
-    });
+    // --- LÓGICA DE AUTO-HIDE (INATIVIDADE) ---
+    let idleTimer;
+    const hideDelay = 3000; // 3 segundos
+
+    function resetIdleTimer() {
+        document.body.classList.remove('user-inactive');
+        clearTimeout(idleTimer);
+
+        idleTimer = setTimeout(() => {
+            // Só esconde se o mouse não estiver em cima de algum modal ou menu
+            const isMenuOpen = !catalogModal.classList.contains('opacity-0') || !fullScheduleModal.classList.contains('opacity-0');
+            if (!isMenuOpen) {
+                document.body.classList.add('user-inactive');
+            }
+        }, hideDelay);
+    }
+
+    // Eventos para detectar atividade
+    window.addEventListener('mousemove', resetIdleTimer);
+    window.addEventListener('mousedown', resetIdleTimer);
+    window.addEventListener('keydown', resetIdleTimer);
+    window.addEventListener('touchstart', resetIdleTimer);
+
+    // Iniciar timer
+    resetIdleTimer();
 
     init();
 });

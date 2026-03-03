@@ -471,6 +471,7 @@
         }
 
         /* Fullscreen UI (Inside Player) */
+        /* Fullscreen UI (Inside Player) */
         .fullscreen-ui {
             position: absolute;
             top: 2rem;
@@ -481,6 +482,7 @@
             align-items: center;
             z-index: 100;
             pointer-events: none;
+            transition: opacity 0.5s ease;
         }
 
         .fullscreen-ui * {
@@ -494,6 +496,25 @@
         :fullscreen .tv-screen {
             border: none !important;
             border-radius: 0 !important;
+        }
+
+        /* Auto-hide Logic */
+        .user-inactive {
+            cursor: none !important;
+        }
+
+        .user-inactive .fullscreen-ui,
+        .user-inactive .custom-controls,
+        .user-inactive .coming-next-toast,
+        .user-inactive #video-overlay {
+            opacity: 0 !important;
+            pointer-events: none !important;
+        }
+
+        .custom-controls,
+        .coming-next-toast,
+        #video-overlay {
+            transition: opacity 0.5s ease !important;
         }
     </style>
 </head>
