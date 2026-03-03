@@ -60,14 +60,19 @@ document.addEventListener('DOMContentLoaded', () => {
 
     auth.onAuthStateChanged(user => {
         if (user) {
-            if (AUTHORIZED_EMAILS.includes(user.email)) {
+            console.log("Usuário logado:", user.email);
+            const isAuthorized = AUTHORIZED_EMAILS.some(e => e.toLowerCase() === user.email.toLowerCase());
+
+            if (isAuthorized) {
+                console.log("Acesso Autorizado!");
                 loginOverlay.classList.add('hidden');
                 adminContent.classList.remove('hidden');
                 loadFromCloud();
             } else {
-                authError.textContent = `Acesso negado para: ${user.email}. Este e-mail não está na lista de autorizados.`;
+                console.warn("Acesso Negado para:", user.email);
+                authError.textContent = `Acesso negado para: ${user.email}. (ID: ${user.uid})`;
                 authError.classList.remove('hidden');
-                auth.signOut();
+                setTimeout(() => auth.signOut(), 3000);
             }
         } else {
             loginOverlay.classList.remove('hidden');
