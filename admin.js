@@ -49,13 +49,25 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     // --- AUTENTICAÇÃO ---
+    // Persistir sessão localmente
+    auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
+
     loginBtn.addEventListener('click', () => {
         const provider = new firebase.auth.GoogleAuthProvider();
         auth.signInWithRedirect(provider);
     });
 
     logoutBtn.addEventListener('click', () => {
-        auth.signOut();
+        auth.signOut().then(() => window.location.reload());
+    });
+
+    // Capturar Resultado do Redirect (ajuda no debug)
+    auth.getRedirectResult().then(result => {
+        if (result.user) console.log("Redirecionamento concluído com sucesso.");
+    }).catch(error => {
+        console.error("Erro no Redirect:", error);
+        authError.textContent = "Erro de Autenticação: " + error.message;
+        authError.classList.remove('hidden');
     });
 
     auth.onAuthStateChanged(user => {
@@ -75,6 +87,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 setTimeout(() => auth.signOut(), 3000);
             }
         } else {
+            console.log("Sessão encerrada ou usuário deslogado.");
             loginOverlay.classList.remove('hidden');
             adminContent.classList.add('hidden');
         }
