@@ -556,7 +556,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (toggleFullscreenBtn && playerContainer) {
         toggleFullscreenBtn.addEventListener('click', () => {
             if (!document.fullscreenElement) {
-                playerContainer.requestFullscreen().catch(err => {
+                document.documentElement.requestFullscreen().catch(err => {
                     console.error(`Erro ao tentar entrar em tela cheia: ${err.message}`);
                 });
             } else {
