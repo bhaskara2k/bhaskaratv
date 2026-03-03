@@ -25,6 +25,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const closeFullScheduleBtn = document.getElementById('close-full-schedule');
     const fullScheduleTabs = document.getElementById('full-schedule-tabs');
     const fullScheduleContent = document.getElementById('full-schedule-content');
+    const fullScheduleWeekRange = document.getElementById('full-schedule-week-range');
     const togglePipBtn = document.getElementById('toggle-pip');
     const nextPlayer = document.getElementById('next-player');
     const colorSampler = document.getElementById('color-sampler');
@@ -695,15 +696,36 @@ document.addEventListener('DOMContentLoaded', () => {
         const currentMinute = now.getMinutes();
         const currentTimeInSeconds = (currentHour * 3600) + (currentMinute * 60);
 
-        // Atualizar estilo das abas
+        // Atualizar estilo e texto das abas
         fullScheduleTabs.querySelectorAll('.day-tab').forEach(btn => {
             const btnDay = parseInt(btn.getAttribute('data-day'));
+
+            // Adicionar data ao texto do botão
+            const btnDiff = btnDay - now.getDay();
+            const bDate = new Date(now);
+            bDate.setDate(now.getDate() + btnDiff);
+            const bDateFmt = `${String(bDate.getDate()).padStart(2, '0')}/${String(bDate.getMonth() + 1).padStart(2, '0')}`;
+
+            const dayNames = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];
+            btn.textContent = `${dayNames[btnDay]} (${bDateFmt})`;
+
             if (btnDay === day) {
                 btn.classList.add('active');
             } else {
                 btn.classList.remove('active');
             }
         });
+
+        // Calcular período da semana (Domingo a Sábado)
+        const sunDiff = 0 - now.getDay();
+        const satDiff = 6 - now.getDay();
+        const sun = new Date(now); sun.setDate(now.getDate() + sunDiff);
+        const sat = new Date(now); sat.setDate(now.getDate() + satDiff);
+
+        const fmt = (d) => `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}`;
+        if (fullScheduleWeekRange) {
+            fullScheduleWeekRange.textContent = `Semana de ${fmt(sun)} a ${fmt(sat)}`;
+        }
 
         const diff = day - now.getDay();
         const targetDate = new Date(now);
