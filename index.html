@@ -1,0 +1,761 @@
+<!DOCTYPE html>
+<html lang="pt-br" class="dark">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bhaskara TV - Entretenimento Linear</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#6366f1">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <link rel="icon" type="image/png" href="pwa-icon.png">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&family=JetBrains+Mono:wght@400;700&display=swap"
+        rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+    <style>
+        :root {
+            --accent: #6366f1;
+            --accent-glow: rgba(99, 102, 241, 0.4);
+            --bg-dark: #050505;
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: var(--bg-dark);
+            color: white;
+            margin: 0;
+            overflow-x: hidden;
+        }
+
+        /* Cinematic Effects */
+        .mesh-gradient {
+            position: fixed;
+            inset: 0;
+            background:
+                radial-gradient(at 0% 0%, rgba(99, 102, 241, 0.15) 0px, transparent 50%),
+                radial-gradient(at 100% 100%, rgba(168, 85, 247, 0.15) 0px, transparent 50%),
+                radial-gradient(at 100% 0%, rgba(59, 130, 246, 0.1) 0px, transparent 50%);
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        .noise {
+            position: fixed;
+            inset: 0;
+            z-index: 9999;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+            opacity: 0.03;
+            pointer-events: none;
+        }
+
+        .premium-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            background: linear-gradient(45deg, rgba(79, 70, 229, 0.05) 0%, transparent 100%);
+            animation: bgShift 15s infinite alternate ease-in-out;
+        }
+
+        @keyframes bgShift {
+            0% {
+                transform: scale(1) translate(0, 0);
+            }
+
+            100% {
+                transform: scale(1.1) translate(20px, 10px);
+            }
+        }
+
+        .glass {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+        }
+
+        .tv-screen {
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8);
+            position: relative;
+            overflow: hidden;
+            aspect-ratio: 16 / 9;
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .tv-screen::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.1) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03));
+            z-index: 5;
+            background-size: 100% 4px, 3px 100%;
+            pointer-events: none;
+            opacity: 0.3;
+        }
+
+        .watermark {
+            position: absolute;
+            top: 2rem;
+            right: 2rem;
+            opacity: 0.4;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.5));
+            pointer-events: none;
+            z-index: 10;
+        }
+
+        .no-signal {
+            background-image: url('standby.png');
+            background-size: cover;
+            background-position: center;
+            height: 100%;
+            width: 100%;
+        }
+
+        .pulse-live {
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% {
+                box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4);
+            }
+
+            70% {
+                box-shadow: 0 0 0 10px rgba(239, 68, 68, 0);
+            }
+
+            100% {
+                box-shadow: 0 0 0 0 rgba(239, 68, 68, 0);
+            }
+        }
+
+        .digital-clock {
+            font-family: 'JetBrains Mono', monospace;
+            letter-spacing: -0.05em;
+            background: rgba(0, 0, 0, 0.3);
+            box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.2);
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.1);
+        }
+
+        .live-tag {
+            background: linear-gradient(90deg, #ef4444, #b91c1c);
+            box-shadow: 0 0 15px rgba(239, 68, 68, 0.3);
+        }
+
+        video::-webkit-media-controls {
+            display: none !important;
+        }
+
+        .custom-controls {
+            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.3s ease;
+            transform: translateY(20px);
+            z-index: 100 !important;
+            pointer-events: auto;
+        }
+
+        .tv-screen:hover .custom-controls {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .coming-next-toast {
+            position: absolute;
+            bottom: 6rem;
+            right: 2rem;
+            transform: translateX(120%);
+            transition: transform 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            z-index: 20;
+        }
+
+        .coming-next-toast.show {
+            transform: translateX(0);
+        }
+
+        /* Badge Styles */
+        .badge {
+            font-size: 0.65rem;
+            font-weight: 800;
+            padding: 2px 8px;
+            border-radius: 4px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .badge-anime {
+            background: #f59e0b;
+            color: #000;
+        }
+
+        .badge-series {
+            background: #8b5cf6;
+            color: #fff;
+        }
+
+        .badge-news {
+            background: #3b82f6;
+            color: #fff;
+        }
+
+        .badge-movie {
+            background: #ef4444;
+            color: #fff;
+        }
+
+        .badge-default {
+            background: rgba(255, 255, 255, 0.1);
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        /* Progress Bar for Schedule */
+        .schedule-progress {
+            height: 3px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 2px;
+            overflow: hidden;
+            margin-top: 12px;
+        }
+
+        .schedule-progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #6366f1, #a855f7);
+            width: 0%;
+            transition: width 1s linear;
+        }
+
+        .program-card {
+            transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+            position: relative;
+            z-index: 1;
+        }
+
+        .program-card::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: inherit;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.05), transparent);
+            z-index: -1;
+            opacity: 0;
+            transition: opacity 0.4s ease;
+        }
+
+        .program-card:hover {
+            transform: translateY(-8px) scale(1.02);
+            background: rgba(255, 255, 255, 0.08);
+            border-color: rgba(99, 102, 241, 0.4) !important;
+            box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.5);
+        }
+
+        .program-card:hover::after {
+            opacity: 1;
+        }
+
+        /* Staggered Entrance */
+        @keyframes cardReveal {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .reveal-node {
+            animation: cardReveal 0.6s cubic-bezier(0.23, 1, 0.32, 1) forwards;
+            opacity: 0;
+        }
+
+        .program-card.live {
+            background: rgba(99, 102, 241, 0.08);
+            border-color: rgba(99, 102, 241, 0.4) !important;
+            box-shadow: 0 0 30px -5px rgba(99, 102, 241, 0.3);
+        }
+
+        .program-card.live::before {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            right: -2px;
+            bottom: -2px;
+            background: linear-gradient(45deg, #6366f1, transparent, #a855f7);
+            z-index: -2;
+            border-radius: inherit;
+            opacity: 0.3;
+        }
+
+        .program-card.past {
+            opacity: 0.4;
+            filter: grayscale(0.8) blur(0.5px);
+        }
+
+        /* Tab Pill Styles */
+        .day-tab {
+            padding: 0.75rem 1.5rem;
+            border-radius: 9999px;
+            font-weight: 700;
+            font-size: 0.875rem;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            background: rgba(255, 255, 255, 0.03);
+            color: rgba(255, 255, 255, 0.5);
+            white-space: nowrap;
+        }
+
+        .day-tab:hover {
+            background: rgba(255, 255, 255, 0.08);
+            color: white;
+            transform: translateY(-2px);
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .day-tab.active {
+            background: var(--accent) !important;
+            color: white !important;
+            border-color: var(--accent) !important;
+            box-shadow: 0 10px 25px -5px var(--accent-glow);
+            opacity: 1 !important;
+            transform: none !important;
+            cursor: default;
+        }
+
+        .day-tab:focus {
+            outline: none !important;
+        }
+
+        .day-tab:focus-visible {
+            background: rgba(99, 102, 241, 0.2) !important;
+            box-shadow: 0 0 0 3px var(--accent) !important;
+            color: white;
+        }
+
+        /* TV Mode Adjustments */
+        @media (min-width: 1400px) {
+            :root {
+                font-size: 18px;
+            }
+        }
+
+        body {
+            background-color: #050505;
+            overflow-x: hidden;
+            min-height: 100vh;
+        }
+
+        /* Safe Zone Container */
+        .safe-area {
+            padding: 2vh 4vw;
+            width: 100%;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Floating Header for TV */
+        .tv-header {
+            margin-bottom: 2rem;
+            border-radius: 1.5rem !important;
+            background: rgba(255, 255, 255, 0.03) !important;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.08) !important;
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.5);
+        }
+
+        /* Remote Control Navigation Focus */
+        /* Remote Control Navigation Focus */
+        :focus-visible {
+            outline: 4px solid #6366f1 !important;
+            outline-offset: 4px;
+            transform: scale(1.05);
+            background: rgba(99, 102, 241, 0.2) !important;
+            box-shadow: 0 0 20px rgba(99, 102, 241, 0.4);
+            z-index: 50;
+        }
+
+        /* Prevent ugly outline on mouse click for specific elements */
+        :focus:not(:focus-visible) {
+            outline: none !important;
+            box-shadow: none !important;
+            transform: none !important;
+        }
+
+        #ambient-light {
+            position: absolute;
+            inset: -50px;
+            filter: blur(100px);
+            z-index: -1;
+            opacity: 0.5;
+            transition: background 1s ease;
+            pointer-events: none;
+            /* Não bloquear cliques */
+        }
+
+        /* Custom Volume Slider */
+        input[type=range] {
+            -webkit-appearance: none;
+            background: transparent;
+        }
+
+        input[type=range]::-webkit-slider-runnable-track {
+            height: 4px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 2px;
+        }
+
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            height: 12px;
+            width: 12px;
+            border-radius: 50%;
+            background: #6366f1;
+            margin-top: -4px;
+            box-shadow: 0 0 10px rgba(99, 102, 241, 0.5);
+            cursor: pointer;
+        }
+
+        /* Custom Circular Scrollbar for Premium Feel */
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: 10px;
+            margin: 10px 0;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: linear-gradient(to bottom, transparent, var(--accent), transparent);
+            border-radius: 10px;
+            border: 2px solid transparent;
+            background-clip: content-box;
+        }
+
+        .custom-scrollbar {
+            scrollbar-width: thin;
+            scrollbar-color: var(--accent) transparent;
+            padding-right: 1.5rem !important;
+            /* Prevent cards from touching scrollbar */
+            mask-image: linear-gradient(to bottom, black 95%, transparent 100%);
+            -webkit-mask-image: linear-gradient(to bottom, black 95%, transparent 100%);
+        }
+
+        /* Prevent Layout Shift */
+        .scrollbar-hide::-webkit-scrollbar {
+            display: none;
+        }
+
+        .scrollbar-hide {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+</head>
+
+<body class="text-white">
+    <div class="safe-area">
+        <div class="mesh-gradient"></div>
+        <div class="noise"></div>
+        <!-- Header -->
+        <header class="tv-header px-8 py-4 flex justify-between items-center sticky top-6 z-50">
+            <div class="flex items-center gap-10">
+                <div class="flex items-center">
+                    <span class="text-2xl font-black tracking-tighter uppercase italic">Bhaskara<span
+                            class="text-indigo-500 not-italic">TV</span></span>
+                </div>
+
+                <nav class="hidden lg:flex items-center gap-8">
+                    <a href="#" class="text-[13px] font-bold text-white relative group">
+                        Início
+                        <span class="absolute -bottom-1 left-0 w-full h-0.5 bg-indigo-500 rounded-full"></span>
+                    </a>
+                    <button id="open-catalog"
+                        class="text-[13px] font-semibold opacity-40 hover:opacity-100 transition-all hover:translate-y-[-1px]">Programas</button>
+                    <button id="open-full-schedule"
+                        class="text-[13px] font-semibold opacity-40 hover:opacity-100 transition-all hover:translate-y-[-1px]">Grade
+                        Semanal</button>
+                </nav>
+            </div>
+
+            <div class="flex items-center gap-6">
+                <div id="clock"
+                    class="digital-clock text-sm font-bold px-5 py-2 rounded-2xl border border-white/5 flex items-center gap-2">
+                    <span class="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse"></span>
+                    00:00:00
+                </div>
+                <div class="live-tag flex items-center gap-2 px-4 py-2 rounded-2xl">
+                    <div class="relative flex h-2 w-2">
+                        <span
+                            class="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
+                        <span class="relative inline-flex rounded-full h-2 w-2 bg-white"></span>
+                    </div>
+                    <span class="text-[11px] font-black uppercase tracking-[0.2em]">Ao Vivo</span>
+                </div>
+            </div>
+        </header>
+
+        <main class="flex-grow container mx-auto px-4 py-8 lg:px-8 max-w-6xl">
+            <!-- Player Section -->
+            <section class="relative group">
+                <div id="player-container"
+                    class="tv-screen bg-black rounded-2xl border border-white/10 shadow-2xl overflow-hidden">
+                    <!-- Ambient Light -->
+                    <div id="ambient-light"></div>
+
+                    <!-- Video Layers for Gapless Playback -->
+                    <video id="tv-player" class="active-video w-full h-full object-cover absolute inset-0"
+                        style="z-index: 10;" muted playsinline>
+                        Seu navegador não suporta vídeos HTML5.
+                    </video>
+                    <video id="next-player"
+                        class="w-full h-full object-cover absolute inset-0 opacity-0 pointer-events-none"
+                        style="z-index: 5;" muted playsinline preload="auto">
+                    </video>
+
+                    <!-- Color Sampler for Ambilight -->
+                    <canvas id="color-sampler" class="hidden" style="pointer-events: none;"></canvas>
+
+                    <!-- Watermark -->
+                    <div class="watermark">
+                        <img src="logo.png" alt="Logo" class="w-8 h-8 opacity-80">
+                        <span class="text-white font-bold tracking-tighter text-xl">TV</span>
+                    </div>
+
+                    <!-- Fallback Screen (Hidden by default) -->
+                    <div id="fallback-screen"
+                        class="absolute inset-0 no-signal hidden text-center flex items-center justify-center"></div>
+
+                    <!-- Coming Up Next Notification -->
+                    <div id="next-toast"
+                        class="coming-next-toast glass p-4 rounded-xl flex items-center gap-4 border-l-4 border-l-indigo-500">
+                        <div class="w-12 h-12 bg-indigo-500/20 rounded-lg flex items-center justify-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-indigo-400" fill="none"
+                                viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M13 5l7 7-7 7M5 5l7 7-7 7" />
+                            </svg>
+                        </div>
+                        <div>
+                            <p class="text-[10px] uppercase tracking-widest text-indigo-400 font-bold mb-1">A seguir</p>
+                            <h4 id="next-title" class="text-sm font-bold">Nome do Próximo Programa</h4>
+                        </div>
+                    </div>
+
+                    <!-- Overlay Info -->
+                    <div id="video-overlay" class="absolute top-6 left-6 pointer-events-none" style="z-index: 100;">
+                        <div class="glass px-4 py-2 rounded-lg inline-block border-l-2 border-indigo-500">
+                            <p id="current-title"
+                                class="text-xs font-bold text-indigo-400 uppercase tracking-widest mb-1">
+                                PROGRAMA ATUAL</p>
+                            <p id="current-program-display" class="text-lg font-bold">Carregando...</p>
+                        </div>
+                    </div>
+
+                    <!-- Custom Controls Overlay -->
+                    <div class="custom-controls absolute bottom-0 left-0 right-0 p-8 bg-gradient-to-t from-black/90 via-black/40 to-transparent opacity-0 flex justify-between items-end"
+                        style="z-index: 40;">
+                        <div class="flex flex-col gap-1">
+                            <h2 id="control-title" class="text-2xl font-bold tracking-tight">Título do Programa</h2>
+                            <p id="control-time" class="text-sm opacity-60">00:00 - 00:00</p>
+                        </div>
+
+                        <div class="flex items-center gap-6">
+                            <!-- Volume Slider -->
+                            <div
+                                class="flex items-center gap-3 bg-white/5 py-2 px-4 rounded-full border border-white/10">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 opacity-50" fill="none"
+                                    viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M15.536 8.464a5 5 0 010 7.072M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
+                                </svg>
+                                <input type="range" id="volume-slider" min="0" max="1" step="0.05" value="1"
+                                    class="w-20 cursor-pointer">
+                            </div>
+
+                            <div class="flex items-center gap-4">
+                                <button id="toggle-pip"
+                                    class="bg-white/5 hover:bg-white/10 p-3 rounded-full border border-white/10 shadow-lg transition-all active:scale-95 group"
+                                    title="Picture in Picture">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 opacity-80" fill="none"
+                                        viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                                    </svg>
+                                </button>
+                                <button id="toggle-fullscreen"
+                                    class="bg-white/5 hover:bg-white/10 p-3 rounded-full border border-white/10 shadow-lg transition-all active:scale-95 group">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 opacity-80" fill="none"
+                                        viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
+                                    </svg>
+                                </button>
+                                <button id="toggle-mute"
+                                    class="bg-indigo-600 hover:bg-indigo-500 p-3 rounded-full shadow-lg transition-all active:scale-95 group">
+                                    <svg id="mute-icon" xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none"
+                                        viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
+                                        <path id="volume-path" stroke-linecap="round" stroke-linejoin="round"
+                                            stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H13" />
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Big Play/Unmute Button (for browser autoplay policy) -->
+                    <div id="unmute-overlay"
+                        class="absolute inset-0 flex items-center justify-center bg-black/40 backdrop-blur-sm cursor-pointer"
+                        style="z-index: 50;">
+                        <div class="text-center">
+                            <div
+                                class="w-20 h-20 bg-indigo-600 rounded-full flex items-center justify-center mx-auto mb-4 hover:scale-110 transition-transform shadow-xl shadow-indigo-500/40">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10" fill="none"
+                                    viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
+                                </svg>
+                            </div>
+                            <p class="text-lg font-bold">Clique para ativar o som</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Program Guide Section -->
+            <section class="mt-12">
+                <div class="flex items-center justify-between mb-6">
+                    <h3 class="text-2xl font-bold">Guia de Programação</h3>
+                    <div id="current-day" class="text-sm font-medium opacity-50 uppercase tracking-widest">Segunda-feira
+                    </div>
+                </div>
+
+                <div id="schedule-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <!-- Program cards will be injected here -->
+                    <div class="animate-pulse glass p-4 rounded-xl h-24"></div>
+                    <div class="animate-pulse glass p-4 rounded-xl h-24"></div>
+                    <div class="animate-pulse glass p-4 rounded-xl h-24"></div>
+                </div>
+            </section>
+        </main>
+
+        <footer class="p-8 text-center text-sm opacity-40">
+            &copy; 2024 Bhaskara TV - Sistema de Transmissão Linear
+        </footer>
+
+        <!-- Catalog Modal -->
+        <div id="catalog-modal"
+            class="fixed inset-0 z-[100] bg-indigo-950/40 backdrop-blur-[100px] flex items-center justify-center opacity-0 pointer-events-none transition-all duration-500">
+            <div class="w-full h-full max-w-[1600px] max-h-[90vh] flex flex-col p-8 md:p-16">
+                <div class="flex justify-between items-start mb-16 px-4">
+                    <div class="reveal-node">
+                        <span class="text-indigo-400 font-bold tracking-[0.3em] uppercase text-xs mb-4 block">Original
+                            BH-TV</span>
+                        <h2 class="text-4xl font-black mb-2 tracking-tighter">Nosso <span
+                                class="text-indigo-500">Catálogo</span></h2>
+                        <p class="text-xl opacity-40 font-medium max-w-2xl leading-relaxed">Os melhores programas e
+                            conteúdos exclusivos, agora integrados na nossa programação linear diária.</p>
+                    </div>
+                    <button id="close-catalog"
+                        class="w-16 h-16 rounded-3xl glass flex items-center justify-center hover:bg-white/10 transition-all hover:rotate-90 active:scale-95">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24"
+                            stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
+
+                <div
+                    class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 overflow-y-auto px-12 pb-32 custom-scrollbar">
+                    <!-- Dynamic Content -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Full Schedule Modal -->
+        <div id="full-schedule-modal"
+            class="fixed inset-0 z-[100] bg-indigo-950/40 backdrop-blur-[100px] flex items-center justify-center opacity-0 pointer-events-none transition-all duration-500">
+            <div class="w-full h-full max-w-[1600px] max-h-[95vh] flex flex-col p-6 md:p-10">
+                <div class="flex justify-between items-start mb-12 px-4">
+                    <div class="reveal-node">
+                        <span class="text-indigo-400 font-bold tracking-[0.3em] uppercase text-xs mb-4 block">Guia de
+                            Programação</span>
+                        <h2 class="text-4xl font-black mb-2 tracking-tighter">Grade <span
+                                class="text-indigo-500">Completa</span></h2>
+                        <p class="text-lg opacity-40 font-medium max-w-2xl">Navegue por toda a nossa infraestrutura de
+                            conteúdo semanal.</p>
+                    </div>
+                    <button id="close-full-schedule"
+                        class="w-16 h-16 rounded-3xl glass flex items-center justify-center hover:bg-white/10 transition-all hover:rotate-90 active:scale-95">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24"
+                            stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
+
+                <!-- Tabs Dias da Semana -->
+                <div class="flex gap-3 mb-6 overflow-x-auto pb-4 px-4 scrollbar-hide shrink-0" id="full-schedule-tabs">
+                    <button data-day="0" class="day-tab">Domingo</button>
+                    <button data-day="1" class="day-tab">Segunda</button>
+                    <button data-day="2" class="day-tab">Terça</button>
+                    <button data-day="3" class="day-tab">Quarta</button>
+                    <button data-day="4" class="day-tab">Quinta</button>
+                    <button data-day="5" class="day-tab">Sexta</button>
+                    <button data-day="6" class="day-tab">Sábado</button>
+                </div>
+
+                <!-- Lista de Programação Central -->
+                <div id="full-schedule-content"
+                    class="flex-grow overflow-y-auto px-12 custom-scrollbar grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 pb-32">
+                    <!-- Cards de programação renderizados via JS -->
+                </div>
+            </div>
+        </div>
+
+    </div> <!-- End Safe Area -->
+
+    <script src="app.js?v=2.6"></script>
+    <script>
+        // Registrar Service Worker para PWA
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('sw.js')
+                    .then(reg => console.log('PWA: Ativo'))
+                    .catch(err => console.log('PWA Erro:', err));
+            });
+        }
+
+        // Bloquear scroll acidental em TVs
+        window.addEventListener('keydown', (e) => {
+            if (["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"].indexOf(e.code) > -1) {
+                // Permitir navegação mas evitar comportamento padrão se necessário
+            }
+        });
+    </script>
+</body>
+
+</html>
