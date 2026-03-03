@@ -55,15 +55,14 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- AUTENTICAÇÃO ---
     loginBtn.addEventListener('click', async () => {
         try {
-            loginBtn.textContent = "Abrindo Google...";
-            loginBtn.disabled = true;
+            authError.classList.add('hidden');
+            loginBtn.textContent = "Aguardando Google...";
             const provider = new firebase.auth.GoogleAuthProvider();
-            await auth.signInWithRedirect(provider);
+            await auth.signInWithPopup(provider);
         } catch (error) {
-            console.error("Erro ao iniciar login:", error);
-            authError.textContent = "Erro: " + error.message;
+            console.error("Erro login:", error);
             authError.classList.remove('hidden');
-            loginBtn.disabled = false;
+            authError.textContent = error.message;
             loginBtn.textContent = "Entrar com Google";
         }
     });
@@ -72,53 +71,28 @@ document.addEventListener('DOMContentLoaded', () => {
         auth.signOut().then(() => window.location.reload());
     });
 
-    // Função para verificar o estado da autorização
-    function checkUser(user) {
-        if (!user) {
-            console.log("AUTH: Nenhum usuário detectado.");
+    auth.onAuthStateChanged(user => {
+        if (user) {
+            console.log("Firebase Auth: Usuário Logado ->", user.email);
+            const userEmail = user.email.toLowerCase();
+            const isAuthorized = AUTHORIZED_EMAILS.some(e => e.toLowerCase() === userEmail);
+
+            if (isAuthorized) {
+                console.log("Firebase Auth: Acesso Permitido!");
+                loginOverlay.classList.add('hidden');
+                adminContent.classList.remove('hidden');
+                loadFromCloud();
+            } else {
+                console.warn("Firebase Auth: Acesso Negado para", user.email);
+                authError.classList.remove('hidden');
+                authError.textContent = "E-mail não autorizado: " + user.email;
+                loginBtn.textContent = "Tentar outra conta";
+            }
+        } else {
+            console.log("Firebase Auth: Nenhum usuário ativo.");
             loginOverlay.classList.remove('hidden');
             adminContent.classList.add('hidden');
-            return;
         }
-
-        console.log("AUTH: Usuário detectado ->", user.email);
-        const isAuthorized = AUTHORIZED_EMAILS.some(e => e.toLowerCase() === user.email.toLowerCase());
-
-        if (isAuthorized) {
-            console.log("AUTH: ACESSO PERMITIDO");
-            loginOverlay.classList.add('hidden');
-            adminContent.classList.remove('hidden');
-            loadFromCloud();
-        } else {
-            console.error("AUTH: ACESSO NEGADO para", user.email);
-            authError.classList.remove('hidden');
-            authError.innerHTML = `
-                <div class="text-red-500 font-bold mb-2">ACESSO NEGADO</div>
-                <div class="text-[10px] opacity-60 mb-4">${user.email} não tem permissão.</div>
-                <button id="btn-switch-account" class="text-xs underline text-indigo-400">Trocar de Conta</button>
-            `;
-            document.getElementById('btn-switch-account')?.addEventListener('click', () => {
-                auth.signOut().then(() => window.location.reload());
-            });
-        }
-    }
-
-    // Tentar processar o resultado do redirecionamento
-    auth.getRedirectResult().then(result => {
-        if (result.user) {
-            console.log("AUTH: Redirect capturado com sucesso.");
-            checkUser(result.user);
-        }
-    }).catch(error => {
-        console.error("AUTH: Erro no retorno do Google:", error);
-        authError.classList.remove('hidden');
-        authError.textContent = "Erro de Autenticação: " + error.message;
-    });
-
-    // Escutar mudanças de estado (Backup do Redirect)
-    auth.onAuthStateChanged(user => {
-        console.log("AUTH: Estado alterado.");
-        checkUser(user);
     });
 
     // --- FETCH DURATION LOGIC ---
