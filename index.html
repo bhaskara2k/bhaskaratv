@@ -481,20 +481,21 @@
         }
 
         body.fullscreen-mode #player-container {
-            position: fixed;
-            inset: 0;
-            z-index: 90;
-            width: 100vw;
-            height: 100vh;
-            border: none;
-            border-radius: 0;
+            position: fixed !important;
+            inset: 0 !important;
+            z-index: 900 !important;
+            width: 100vw !important;
+            height: 100vh !important;
+            border: none !important;
+            border-radius: 0 !important;
+            margin: 0 !important;
         }
 
         body.fullscreen-mode .tv-header {
             background: linear-gradient(to bottom, rgba(0, 0, 0, 0.8), transparent);
             border: none;
             padding: 2rem 4rem;
-            z-index: 100;
+            z-index: 1000 !important;
         }
 
         body.fullscreen-mode #btn-exit-fullscreen {
