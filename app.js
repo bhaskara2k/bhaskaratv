@@ -29,6 +29,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const nextPlayer = document.getElementById('next-player');
     const colorSampler = document.getElementById('color-sampler');
     const ctxSampler = colorSampler ? colorSampler.getContext('2d', { willReadFrequently: true }) : null;
+    const btnExitFullscreen = document.getElementById('btn-exit-fullscreen');
+    const openCatalogHeaderBtn = document.getElementById('open-catalog-header');
+    const openFullScheduleHeaderBtn = document.getElementById('open-full-schedule-header');
 
     // Safe check for critical elements
     if (!videoPlayer || !scheduleList || !currentTitle) {
@@ -577,6 +580,12 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    if (openCatalogHeaderBtn && catalogModal) {
+        openCatalogHeaderBtn.addEventListener('click', () => {
+            catalogModal.classList.remove('opacity-0', 'pointer-events-none');
+        });
+    }
+
     if (closeCatalogBtn && catalogModal) {
         closeCatalogBtn.addEventListener('click', () => {
             catalogModal.classList.add('opacity-0', 'pointer-events-none');
@@ -586,6 +595,14 @@ document.addEventListener('DOMContentLoaded', () => {
     // Modal Full Schedule Logic
     if (openFullScheduleBtn && fullScheduleModal) {
         openFullScheduleBtn.addEventListener('click', () => {
+            const now = new Date();
+            renderWeeklySchedule(now.getDay()); // Abre no dia atual
+            fullScheduleModal.classList.remove('opacity-0', 'pointer-events-none');
+        });
+    }
+
+    if (openFullScheduleHeaderBtn && fullScheduleModal) {
+        openFullScheduleHeaderBtn.addEventListener('click', () => {
             const now = new Date();
             renderWeeklySchedule(now.getDay()); // Abre no dia atual
             fullScheduleModal.classList.remove('opacity-0', 'pointer-events-none');
@@ -714,11 +731,21 @@ document.addEventListener('DOMContentLoaded', () => {
         if (document.fullscreenElement) {
             playerContainer.classList.add('rounded-none');
             playerContainer.classList.remove('rounded-2xl');
+            document.body.classList.add('fullscreen-mode');
         } else {
             playerContainer.classList.add('rounded-2xl');
             playerContainer.classList.remove('rounded-none');
+            document.body.classList.remove('fullscreen-mode');
         }
     });
+
+    if (btnExitFullscreen) {
+        btnExitFullscreen.addEventListener('click', () => {
+            if (document.fullscreenElement) {
+                document.exitFullscreen();
+            }
+        });
+    }
 
     function updateMuteUI() {
         if (videoPlayer.muted) {

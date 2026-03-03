@@ -469,6 +469,28 @@
             -ms-overflow-style: none;
             scrollbar-width: none;
         }
+
+        /* Fullscreen Layout Overrides */
+        body.fullscreen-mode .tv-header nav,
+        body.fullscreen-mode .tv-header .digital-clock,
+        body.fullscreen-mode .tv-header .live-tag,
+        body.fullscreen-mode #video-overlay {
+            display: none !important;
+        }
+
+        body.fullscreen-mode .tv-header {
+            background: linear-gradient(to bottom, rgba(0, 0, 0, 0.8), transparent);
+            border: none;
+            padding: 2rem 4rem;
+        }
+
+        body.fullscreen-mode #btn-exit-fullscreen {
+            display: flex !important;
+        }
+
+        #btn-exit-fullscreen {
+            display: none;
+        }
     </style>
 </head>
 
@@ -477,7 +499,8 @@
         <div class="mesh-gradient"></div>
         <div class="noise"></div>
         <!-- Header -->
-        <header class="tv-header px-8 py-4 flex justify-between items-center sticky top-6 z-50">
+        <header
+            class="tv-header px-8 py-6 flex justify-between items-center fixed top-0 left-0 w-full z-[100] transition-all duration-500">
             <div class="flex items-center gap-10">
                 <div class="flex items-center">
                     <span class="text-2xl font-black tracking-tighter uppercase italic">Bhaskara<span
@@ -489,15 +512,25 @@
                         Início
                         <span class="absolute -bottom-1 left-0 w-full h-0.5 bg-indigo-500 rounded-full"></span>
                     </a>
-                    <button id="open-catalog"
+                    <button id="open-catalog-header"
                         class="text-[13px] font-semibold opacity-40 hover:opacity-100 transition-all hover:translate-y-[-1px]">Programas</button>
-                    <button id="open-full-schedule"
+                    <button id="open-full-schedule-header"
                         class="text-[13px] font-semibold opacity-40 hover:opacity-100 transition-all hover:translate-y-[-1px]">Grade
                         Semanal</button>
                 </nav>
             </div>
 
             <div class="flex items-center gap-6">
+                <!-- Minimize Button (Always in Fullscreen) -->
+                <button id="btn-exit-fullscreen"
+                    class="hidden glass p-3 rounded-full hover:bg-white/10 transition-all border-white/20">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24"
+                        stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
+                    </svg>
+                </button>
+
                 <div id="clock"
                     class="digital-clock text-sm font-bold px-5 py-2 rounded-2xl border border-white/5 flex items-center gap-2">
                     <span class="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse"></span>
@@ -514,7 +547,7 @@
             </div>
         </header>
 
-        <main class="flex-grow container mx-auto px-4 py-8 lg:px-8 max-w-6xl">
+        <main class="pt-[100px] flex-grow container mx-auto px-4 py-8 lg:px-8 max-w-6xl">
             <!-- Player Section -->
             <section class="relative group">
                 <div id="player-container"

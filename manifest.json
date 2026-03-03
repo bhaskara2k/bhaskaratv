@@ -4,6 +4,11 @@
     "description": "Sua WebTV Premium Linear",
     "start_url": "index.html",
     "display": "standalone",
+    "orientation": "landscape",
+    "categories": [
+        "entertainment",
+        "video"
+    ],
     "background_color": "#000000",
     "theme_color": "#6366f1",
     "icons": [
