@@ -13,12 +13,16 @@ firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.firestore();
 
-// --- SEGURANÇA: EMAILS AUTORIZADOS ---
-// ADICIONE SEU EMAIL AQUI PARA TER ACESSO
 const AUTHORIZED_EMAILS = [
-    'hiagogmedeiros@gmail.com', // Seu e-mail autorizado
-    // adicione mais e-mails se necessário
+    'hiagogmedeiros@gmail.com',
+    'hiagomedeiros@gmail.com', // Adicionado backup por precaução
+    'hiagomedeiros.dev@gmail.com'
 ];
+
+// --- AUTH STATE PERSISTENCE ---
+auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
+
+console.log("Firebase Auth Initialized");
 
 document.addEventListener('DOMContentLoaded', () => {
     // UI Elements
@@ -49,9 +53,6 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     // --- AUTENTICAÇÃO ---
-    // Persistir sessão localmente
-    auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
-
     loginBtn.addEventListener('click', () => {
         const provider = new firebase.auth.GoogleAuthProvider();
         auth.signInWithRedirect(provider);
@@ -61,33 +62,30 @@ document.addEventListener('DOMContentLoaded', () => {
         auth.signOut().then(() => window.location.reload());
     });
 
-    // Capturar Resultado do Redirect (ajuda no debug)
     auth.getRedirectResult().then(result => {
-        if (result.user) console.log("Redirecionamento concluído com sucesso.");
+        if (result.user) console.log("Redirect success:", result.user.email);
     }).catch(error => {
-        console.error("Erro no Redirect:", error);
-        authError.textContent = "Erro de Autenticação: " + error.message;
+        console.error("Redirect error:", error);
         authError.classList.remove('hidden');
+        authError.textContent = "Erro Firebase: " + error.code;
     });
 
     auth.onAuthStateChanged(user => {
+        console.log("OnAuthStateChanged:", user ? user.email : "Ninguém");
         if (user) {
-            console.log("Usuário logado:", user.email);
             const isAuthorized = AUTHORIZED_EMAILS.some(e => e.toLowerCase() === user.email.toLowerCase());
 
             if (isAuthorized) {
-                console.log("Acesso Autorizado!");
+                console.log("ACESSO AUTORIZADO");
                 loginOverlay.classList.add('hidden');
                 adminContent.classList.remove('hidden');
                 loadFromCloud();
             } else {
-                console.warn("Acesso Negado para:", user.email);
-                authError.textContent = `Acesso negado para: ${user.email}. (ID: ${user.uid})`;
+                console.error("ACESSO NEGADO:", user.email);
                 authError.classList.remove('hidden');
-                setTimeout(() => auth.signOut(), 3000);
+                authError.innerHTML = `E-mail não autorizado:<br>${user.email}<br><button onclick="firebase.auth().signOut()" class="text-xs underline mt-2">Trocar de Conta</button>`;
             }
         } else {
-            console.log("Sessão encerrada ou usuário deslogado.");
             loginOverlay.classList.remove('hidden');
             adminContent.classList.add('hidden');
         }
@@ -209,13 +207,20 @@ document.addEventListener('DOMContentLoaded', () => {
                         </div>
                     </div>
                 </div>
-                <button onclick="removeSchedule(${index})" class="p-6 rounded-3xl hover:bg-red-500/10 text-red-500 opacity-0 group-hover:opacity-100 transition-all">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                    </svg>
-                </button>
+                <div class="flex gap-4">
+                    <button data-index="${index}" class="btn-remove-schedule p-6 rounded-3xl hover:bg-red-500/10 text-red-500 opacity-0 group-hover:opacity-100 transition-all">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                    </button>
+                </div>
             `;
             scheduleContainer.appendChild(card);
+        });
+
+        // Add event listeners programmatically (Safe for CSP)
+        document.querySelectorAll('.btn-remove-schedule').forEach(btn => {
+            btn.addEventListener('click', () => removeSchedule(btn.dataset.index));
         });
     }
 
@@ -237,7 +242,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         <span class="text-[10px] px-3 py-1 rounded-full bg-purple-500/20 text-purple-400 font-black uppercase tracking-widest">${item.type}</span>
                     </div>
                     <p class="text-sm opacity-50 line-clamp-2 mb-6 leading-relaxed">${item.description}</p>
-                    <button onclick="removeCatalog(${index})" class="absolute bottom-6 right-6 p-3 rounded-2xl bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white transition-all">
+                    <button data-index="${index}" class="btn-remove-catalog absolute bottom-6 right-6 p-3 rounded-2xl bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white transition-all">
                          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                         </svg>
@@ -245,6 +250,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 </div>
             `;
             catalogContainer.appendChild(card);
+        });
+
+        // Add event listeners (Safe for CSP)
+        document.querySelectorAll('.btn-remove-catalog').forEach(btn => {
+            btn.addEventListener('click', () => removeCatalog(btn.dataset.index));
         });
     }
 
