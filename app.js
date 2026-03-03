@@ -29,7 +29,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const nextPlayer = document.getElementById('next-player');
     const colorSampler = document.getElementById('color-sampler');
     const ctxSampler = colorSampler ? colorSampler.getContext('2d', { willReadFrequently: true }) : null;
-    const btnExitFullscreen = document.getElementById('btn-exit-fullscreen');
+    const btnMinimizeFullscreen = document.getElementById('btn-minimize-fullscreen');
     const openCatalogHeaderBtn = document.getElementById('open-catalog-header');
     const openFullScheduleHeaderBtn = document.getElementById('open-full-schedule-header');
 
@@ -556,12 +556,18 @@ document.addEventListener('DOMContentLoaded', () => {
     if (toggleFullscreenBtn && playerContainer) {
         toggleFullscreenBtn.addEventListener('click', () => {
             if (!document.fullscreenElement) {
-                document.documentElement.requestFullscreen().catch(err => {
-                    console.error(`Erro ao tentar entrar em tela cheia: ${err.message}`);
+                playerContainer.requestFullscreen().catch(err => {
+                    console.error(`Erro: ${err.message}`);
                 });
             } else {
                 if (document.exitFullscreen) document.exitFullscreen();
             }
+        });
+    }
+
+    if (btnMinimizeFullscreen) {
+        btnMinimizeFullscreen.addEventListener('click', () => {
+            if (document.exitFullscreen) document.exitFullscreen();
         });
     }
 
@@ -731,21 +737,11 @@ document.addEventListener('DOMContentLoaded', () => {
         if (document.fullscreenElement) {
             playerContainer.classList.add('rounded-none');
             playerContainer.classList.remove('rounded-2xl');
-            document.body.classList.add('fullscreen-mode');
         } else {
             playerContainer.classList.add('rounded-2xl');
             playerContainer.classList.remove('rounded-none');
-            document.body.classList.remove('fullscreen-mode');
         }
     });
-
-    if (btnExitFullscreen) {
-        btnExitFullscreen.addEventListener('click', () => {
-            if (document.fullscreenElement) {
-                document.exitFullscreen();
-            }
-        });
-    }
 
     function updateMuteUI() {
         if (videoPlayer.muted) {

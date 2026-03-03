@@ -470,40 +470,30 @@
             scrollbar-width: none;
         }
 
-        /* Fullscreen Layout Overrides */
-        body.fullscreen-mode .tv-header nav,
-        body.fullscreen-mode .tv-header .digital-clock,
-        body.fullscreen-mode .tv-header .live-tag,
-        body.fullscreen-mode #video-overlay,
-        body.fullscreen-mode .custom-controls,
-        body.fullscreen-mode main>*:not(section) {
-            display: none !important;
+        /* Fullscreen UI (Inside Player) */
+        .fullscreen-ui {
+            position: absolute;
+            top: 2rem;
+            left: 2rem;
+            right: 2rem;
+            display: none;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 100;
+            pointer-events: none;
         }
 
-        body.fullscreen-mode #player-container {
-            position: fixed !important;
-            inset: 0 !important;
-            z-index: 900 !important;
-            width: 100vw !important;
-            height: 100vh !important;
+        .fullscreen-ui * {
+            pointer-events: auto;
+        }
+
+        :fullscreen .fullscreen-ui {
+            display: flex;
+        }
+
+        :fullscreen .tv-screen {
             border: none !important;
             border-radius: 0 !important;
-            margin: 0 !important;
-        }
-
-        body.fullscreen-mode .tv-header {
-            background: linear-gradient(to bottom, rgba(0, 0, 0, 0.8), transparent);
-            border: none;
-            padding: 2rem 4rem;
-            z-index: 1000 !important;
-        }
-
-        body.fullscreen-mode #btn-exit-fullscreen {
-            display: flex !important;
-        }
-
-        #btn-exit-fullscreen {
-            display: none;
         }
     </style>
 </head>
@@ -568,6 +558,23 @@
                     class="tv-screen bg-black rounded-2xl border border-white/10 shadow-2xl overflow-hidden">
                     <!-- Ambient Light -->
                     <div id="ambient-light"></div>
+
+                    <!-- Fullscreen Overlay (Only visible in fullscreen) -->
+                    <div class="fullscreen-ui">
+                        <div class="flex items-center">
+                            <span
+                                class="text-2xl font-black tracking-tighter uppercase italic text-white drop-shadow-lg">Bhaskara<span
+                                    class="text-indigo-500 not-italic">TV</span></span>
+                        </div>
+                        <button id="btn-minimize-fullscreen"
+                            class="glass p-3 rounded-full hover:bg-white/10 transition-all border-white/20">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-white" fill="none"
+                                viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
+                            </svg>
+                        </button>
+                    </div>
 
                     <!-- Video Layers for Gapless Playback -->
                     <video id="tv-player" class="active-video w-full h-full object-cover absolute inset-0"
