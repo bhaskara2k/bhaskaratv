@@ -218,10 +218,22 @@ document.addEventListener('DOMContentLoaded', () => {
 
             card.innerHTML = `
                 <div class="flex gap-8 items-center">
-                    <div class="text-3xl font-black text-indigo-500 bg-indigo-500/10 w-24 h-24 rounded-[1.5rem] flex flex-col items-center justify-center font-mono italic shrink-0">
-                        <span class="text-[10px] opacity-40 not-italic uppercase tracking-widest mb-1">FIM ${endTimeStr}</span>
-                        ${prog.startTime}
+                    <!-- Bloco de Horário Ultra Premium -->
+                    <div class="relative flex flex-col justify-center items-center w-28 h-28 rounded-[2rem] bg-indigo-500/5 group-hover:bg-indigo-500/10 transition-all border border-white/5 shrink-0 overflow-hidden">
+                        <!-- Efeito de Brilho Interno Sugerido -->
+                        <div class="absolute -top-10 -left-10 w-24 h-24 bg-indigo-500/10 blur-[40px] pointer-events-none"></div>
+                        
+                        <div class="relative z-10 flex flex-col items-center">
+                            <span class="text-[9px] font-black text-indigo-400/40 uppercase tracking-[0.2em] mb-1">Início</span>
+                            <div class="text-3xl font-black text-white font-mono italic leading-none">${prog.startTime}</div>
+                            
+                            <div class="mt-3 flex items-center gap-1.5 py-1.5 px-3 rounded-full bg-white/5 border border-white/5 shadow-lg">
+                                <span class="text-[8px] font-black opacity-30 uppercase tracking-tighter">Fim</span>
+                                <span class="text-[11px] font-bold text-indigo-300 font-mono">${endTimeStr}</span>
+                            </div>
+                        </div>
                     </div>
+
                     <div>
                         <h3 class="text-2xl font-black mb-1 uppercase italic tracking-tighter">${prog.title}</h3>
                         <p class="text-sm text-indigo-300 opacity-60 mb-2 italic line-clamp-1">${prog.description || 'Sem descrição'}</p>
