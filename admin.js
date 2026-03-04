@@ -186,6 +186,16 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
+        // Ordenar: Primeiro os sem data (semanais) por horário, depois os com data por data e horário
+        config.schedule.sort((a, b) => {
+            const dateA = a.date || "";
+            const dateB = b.date || "";
+            if (dateA !== dateB) {
+                return dateA.localeCompare(dateB);
+            }
+            return a.startTime.localeCompare(b.startTime);
+        });
+
         config.schedule.forEach((prog, index) => {
             const [h, m] = prog.startTime.split(':').map(Number);
             const startDate = new Date();
