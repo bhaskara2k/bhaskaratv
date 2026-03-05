@@ -5,5 +5,16 @@
             "source": "/admin",
             "destination": "/admin.html"
         }
+    ],
+    "headers": [
+        {
+            "source": "/(.*).apk",
+            "headers": [
+                {
+                    "key": "Content-Type",
+                    "value": "application/vnd.android.package-archive"
+                }
+            ]
+        }
     ]
 }
