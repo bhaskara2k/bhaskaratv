@@ -600,6 +600,135 @@
             margin-top: 0.5rem;
         }
 
+        /* ========== APK DOWNLOAD POPUP ========== */
+        #apk-popup {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            z-index: 500;
+            width: 320px;
+            background: rgba(15, 12, 28, 0.85);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(124, 58, 237, 0.3);
+            border-radius: 1.5rem;
+            padding: 1.5rem;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.05);
+            transform: translateY(120%) scale(0.95);
+            opacity: 0;
+            transition: all 0.6s cubic-bezier(0.23, 1, 0.32, 1);
+            color: #fff;
+        }
+
+        #apk-popup.show {
+            transform: translateY(0) scale(1);
+            opacity: 1;
+        }
+
+        .apk-close {
+            position: absolute;
+            top: 0.75rem;
+            right: 0.75rem;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.05);
+            color: rgba(255, 255, 255, 0.4);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .apk-close:hover {
+            background: rgba(239, 68, 68, 0.2);
+            color: #ef4444;
+        }
+
+        .apk-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .apk-icon {
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg, var(--accent), var(--accent-2));
+            border-radius: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 8px 16px rgba(124, 58, 237, 0.3);
+        }
+
+        .apk-info h4 {
+            font-weight: 800;
+            font-size: 1.1rem;
+            margin-bottom: 2px;
+            letter-spacing: -0.02em;
+        }
+
+        .apk-info p {
+            font-size: 0.75rem;
+            opacity: 0.6;
+        }
+
+        .apk-desc {
+            font-size: 0.85rem;
+            line-height: 1.5;
+            opacity: 0.8;
+            margin-bottom: 1.25rem;
+        }
+
+        .apk-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            width: 100%;
+            padding: 0.85rem;
+            background: var(--accent);
+            color: #fff;
+            border-radius: 1rem;
+            font-weight: 800;
+            font-size: 0.9rem;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(124, 58, 237, 0.25);
+        }
+
+        .apk-btn:hover {
+            background: #8b5cf6;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(124, 58, 237, 0.4);
+        }
+
+        .apk-donot-show {
+            display: block;
+            text-align: center;
+            margin-top: 0.75rem;
+            font-size: 0.65rem;
+            opacity: 0.3;
+            cursor: pointer;
+            transition: opacity 0.2s ease;
+        }
+
+        .apk-donot-show:hover {
+            opacity: 0.6;
+            text-decoration: underline;
+        }
+
+        @media (max-width: 640px) {
+            #apk-popup {
+                left: 1rem;
+                right: 1rem;
+                bottom: 1rem;
+                width: auto;
+            }
+        }
+
         .transition-loader span {
             width: 6px;
             height: 6px;
@@ -1749,6 +1878,35 @@
                 <!-- dynamic content -->
             </div>
         </div>
+    </div>
+
+    <!-- APK Download Popup -->
+    <div id="apk-popup" role="dialog" aria-labelledby="apk-title">
+        <div class="apk-close" id="close-apk-popup" title="Fechar">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <path d="M18 6L6 18M6 6l12 12" />
+            </svg>
+        </div>
+        <div class="apk-header">
+            <div class="apk-icon">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
+                    <path d="M4 17L12 21L20 17M4 12L12 16L20 12M12 3L4 7L12 11L20 7L12 3Z" />
+                </svg>
+            </div>
+            <div class="apk-info">
+                <h4 id="apk-title">BhaskaraTV App</h4>
+                <p>v1.0.0 • Android APK</p>
+            </div>
+        </div>
+        <p class="apk-desc">Assista todos os animes e programas direto no seu celular com o nosso aplicativo oficial!
+        </p>
+        <a href="BhaskaraTV.apk" class="apk-btn" download>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+            </svg>
+            Baixar Agora
+        </a>
+        <span class="apk-donot-show" id="apk-dont-show">Não mostrar novamente hoje</span>
     </div>
 
     <!-- TV Mode Badge -->

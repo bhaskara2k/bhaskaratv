@@ -1017,5 +1017,43 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+    // --- LÓGICA DO POPUP APK ---
+    const apkPopup = document.getElementById('apk-popup');
+    const closeApkBtn = document.getElementById('close-apk-popup');
+    const dontShowApkBtn = document.getElementById('apk-dont-show');
+
+    function checkApkPopup() {
+        if (!apkPopup) return;
+
+        // Verifica se o usuário já marcou para não mostrar hoje
+        const lastDismiss = localStorage.getItem('apk_popup_dismissed_date');
+        const today = new Date().toDateString();
+
+        if (lastDismiss === today) return;
+
+        // Só mostra se não estiver no modo TV (em TVs APKs de celular podem ser estranhos) 
+        // e se for um dispositivo provável de querer o APK (não iOS por exemplo, mas deixaremos aberto)
+        setTimeout(() => {
+            if (!tvModeActive) {
+                apkPopup.classList.add('show');
+            }
+        }, 8000); // Mostra após 8 segundos de navegação
+    }
+
+    if (closeApkBtn) {
+        closeApkBtn.addEventListener('click', () => {
+            apkPopup.classList.remove('show');
+        });
+    }
+
+    if (dontShowApkBtn) {
+        dontShowApkBtn.addEventListener('click', () => {
+            localStorage.setItem('apk_popup_dismissed_date', new Date().toDateString());
+            apkPopup.classList.remove('show');
+        });
+    }
+
+    checkApkPopup();
+
     init();
 });
