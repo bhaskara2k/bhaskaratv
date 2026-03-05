@@ -937,15 +937,15 @@ document.addEventListener('DOMContentLoaded', () => {
     // =====================================================================
 
     let mouseUsed = false;
-    let tvModeActive = false;
+    window.tvModeActive = false;
     const tvModeBadge = document.getElementById('tv-mode-badge');
 
     document.addEventListener('mousemove', () => { mouseUsed = true; }, { once: true });
     document.addEventListener('mousedown', () => { mouseUsed = true; }, { once: true });
 
     function activateTVMode() {
-        if (tvModeActive) return;
-        tvModeActive = true;
+        if (window.tvModeActive) return;
+        window.tvModeActive = true;
 
         document.body.classList.add('tv-mode');
 
@@ -977,7 +977,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const isDPad = ['ArrowRight', 'ArrowDown', 'ArrowLeft', 'ArrowUp'].includes(e.key);
 
         // Detecção de TV Mode: primeira tecla de seta sem mouse
-        if (isDPad && !mouseUsed && !tvModeActive) {
+        if (isDPad && !mouseUsed && !window.tvModeActive) {
             activateTVMode();
         }
 
@@ -1031,13 +1031,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (lastDismiss === today) return;
 
-        // Só mostra se não estiver no modo TV (em TVs APKs de celular podem ser estranhos) 
-        // e se for um dispositivo provável de querer o APK (não iOS por exemplo, mas deixaremos aberto)
+        // Mostra o popup para todos os dispositivos após 8 segundos
         setTimeout(() => {
-            if (!tvModeActive) {
-                apkPopup.classList.add('show');
+            apkPopup.classList.add('show');
+
+            // Se estiver no TV Mode, coloca o foco no botão de fechar para facilitar a navegação por controle
+            if (window.tvModeActive && closeApkBtn) {
+                closeApkBtn.focus();
             }
-        }, 8000); // Mostra após 8 segundos de navegação
+        }, 8000);
     }
 
     if (closeApkBtn) {
