@@ -192,6 +192,34 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
+        // --- TRANSIÇÃO DE PROGRAMA ---
+        // Se já havia um programa rodando, mostra tela de transição
+        const transitionEl = document.getElementById('program-transition');
+        const transitionTitleEl = document.getElementById('transition-title');
+        const wasPlaying = !!currentProgram;
+
+        function showTransition(title) {
+            if (!transitionEl || !transitionTitleEl) return;
+            transitionTitleEl.textContent = title;
+            // Força reset da animação do título
+            transitionTitleEl.style.animation = 'none';
+            requestAnimationFrame(() => {
+                transitionTitleEl.style.animation = '';
+                transitionEl.classList.add('show');
+            });
+        }
+
+        function hideTransition() {
+            if (!transitionEl) return;
+            transitionEl.classList.remove('show');
+        }
+
+        if (wasPlaying) {
+            showTransition(program.title);
+            // Esconde após 2.8 segundos (tempo suficiente para o vídeo carregar)
+            setTimeout(hideTransition, 2800);
+        }
+
         currentProgram = program;
 
         const [startH, startM] = program.startTime.split(':').map(Number);
@@ -884,26 +912,95 @@ document.addEventListener('DOMContentLoaded', () => {
         return url;
     }
 
-    // --- Lógica de Navegação por Controle Remoto (D-Pad) ---
-    const focusableElements = 'button, input, [tabindex="0"]';
+    // =====================================================================
+    // MODO TV (D-PAD / CONTROLE REMOTO)
+    // =====================================================================
+    // Detecta se o usuário é de TV: primeira navegação por seta sem uso de mouse
+    // antes dele. Quando detectado:
+    //   1. Ativa fullscreen automático
+    //   2. Mostra badge "Modo TV ativado"
+    //   3. Aplica body.tv-mode para estilos de foco aprimorados
+    //   4. Navegação por D-pad fica smarter: só elementos visíveis e focusable
+    // =====================================================================
+
+    let mouseUsed = false;
+    let tvModeActive = false;
+    const tvModeBadge = document.getElementById('tv-mode-badge');
+
+    document.addEventListener('mousemove', () => { mouseUsed = true; }, { once: true });
+    document.addEventListener('mousedown', () => { mouseUsed = true; }, { once: true });
+
+    function activateTVMode() {
+        if (tvModeActive) return;
+        tvModeActive = true;
+
+        document.body.classList.add('tv-mode');
+
+        // Badge de notificação
+        if (tvModeBadge) {
+            tvModeBadge.classList.add('show');
+            setTimeout(() => tvModeBadge.classList.remove('show'), 3500);
+        }
+
+        // Entrar em fullscreen automaticamente
+        if (!document.fullscreenElement && playerContainer) {
+            playerContainer.requestFullscreen().catch(() => { });
+        }
+
+        console.log('[TV MODE] Modo TV ativado.');
+    }
+
+    // Retorna todos os elementos focusable que estão visíveis no DOM atualmente
+    function getVisibleFocusable() {
+        const sel = 'button:not([disabled]), input:not([disabled]), [tabindex="0"]';
+        return Array.from(document.querySelectorAll(sel)).filter(el => {
+            if (el.offsetParent === null) return false; // hidden (display:none, visibility:hidden)
+            const rect = el.getBoundingClientRect();
+            return rect.width > 0 && rect.height > 0;
+        });
+    }
 
     window.addEventListener('keydown', (e) => {
+        const isDPad = ['ArrowRight', 'ArrowDown', 'ArrowLeft', 'ArrowUp'].includes(e.key);
+
+        // Detecção de TV Mode: primeira tecla de seta sem mouse
+        if (isDPad && !mouseUsed && !tvModeActive) {
+            activateTVMode();
+        }
+
         const active = document.activeElement;
-        const allFocusable = Array.from(document.querySelectorAll(focusableElements));
+        const allFocusable = getVisibleFocusable();
         let index = allFocusable.indexOf(active);
+        if (index === -1) index = 0;
 
         if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
             e.preventDefault();
-            let nextIndex = (index + 1) % allFocusable.length;
-            allFocusable[nextIndex].focus();
-        }
-        else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+            const next = allFocusable[(index + 1) % allFocusable.length];
+            next.focus();
+            if (tvModeActive) next.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'nearest' });
+        } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
             e.preventDefault();
-            let prevIndex = (index - 1 + allFocusable.length) % allFocusable.length;
-            allFocusable[prevIndex].focus();
-        }
-        else if (e.key === 'Enter') {
-            if (active && active.click) active.click();
+            const prev = allFocusable[(index - 1 + allFocusable.length) % allFocusable.length];
+            prev.focus();
+            if (tvModeActive) prev.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'nearest' });
+        } else if (e.key === 'Enter') {
+            if (active && active !== document.body) active.click();
+        } else if (e.key === 'Escape') {
+            // ESC fecha modais abertos
+            const openModal = document.querySelector('.modal-backdrop.open');
+            if (openModal) {
+                const closeBtn = openModal.querySelector('[id^="close-"]');
+                if (closeBtn) closeBtn.click();
+            } else if (document.fullscreenElement) {
+                document.exitFullscreen();
+            }
+        } else if (e.key === 'Backspace') {
+            // Backspace = voltar / fechar (comum em TVs)
+            const openModal = document.querySelector('.modal-backdrop.open');
+            if (openModal) {
+                const closeBtn = openModal.querySelector('[id^="close-"]');
+                if (closeBtn) closeBtn.click();
+            }
         }
     });
 
