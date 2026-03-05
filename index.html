@@ -1728,6 +1728,37 @@
                         </div>
                     </div>
 
+                    <!-- APK Download Popup (Dentro do player para aparecer no Fullscreen da TV) -->
+                    <div id="apk-popup" role="dialog" aria-labelledby="apk-title" style="display:none;">
+                        <div class="apk-close" id="close-apk-popup" title="Fechar" tabindex="0">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                                <path d="M18 6L6 18M6 6l12 12" />
+                            </svg>
+                        </div>
+                        <div class="apk-header">
+                            <div class="apk-icon">
+                                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white"
+                                    stroke-width="2">
+                                    <path d="M4 17L12 21L20 17M4 12L12 16L20 12M12 3L4 7L12 11L20 7L12 3Z" />
+                                </svg>
+                            </div>
+                            <div class="apk-info">
+                                <h4 id="apk-title">BhaskaraTV App</h4>
+                                <p>v1.0.0 • Android APK</p>
+                            </div>
+                        </div>
+                        <p class="apk-desc">Assista todos os animes e programas direto no seu celular com o nosso
+                            aplicativo oficial!</p>
+                        <a href="BhaskaraTV.apk" class="apk-btn" download>
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2.5">
+                                <path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                            </svg>
+                            Baixar Agora
+                        </a>
+                        <span class="apk-donot-show" id="apk-dont-show" tabindex="0">Não mostrar hoje</span>
+                    </div>
+
                     <!-- Program Info Overlay (top left) -->
                     <div id="video-overlay" aria-live="polite">
                         <div class="overlay-pill">
@@ -1878,35 +1909,6 @@
                 <!-- dynamic content -->
             </div>
         </div>
-    </div>
-
-    <!-- APK Download Popup -->
-    <div id="apk-popup" role="dialog" aria-labelledby="apk-title">
-        <div class="apk-close" id="close-apk-popup" title="Fechar">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                <path d="M18 6L6 18M6 6l12 12" />
-            </svg>
-        </div>
-        <div class="apk-header">
-            <div class="apk-icon">
-                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
-                    <path d="M4 17L12 21L20 17M4 12L12 16L20 12M12 3L4 7L12 11L20 7L12 3Z" />
-                </svg>
-            </div>
-            <div class="apk-info">
-                <h4 id="apk-title">BhaskaraTV App</h4>
-                <p>v1.0.0 • Android APK</p>
-            </div>
-        </div>
-        <p class="apk-desc">Assista todos os animes e programas direto no seu celular com o nosso aplicativo oficial!
-        </p>
-        <a href="BhaskaraTV.apk" class="apk-btn" download>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                <path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-            </svg>
-            Baixar Agora
-        </a>
-        <span class="apk-donot-show" id="apk-dont-show">Não mostrar novamente hoje</span>
     </div>
 
     <!-- TV Mode Badge -->

@@ -1023,22 +1023,37 @@ document.addEventListener('DOMContentLoaded', () => {
     const dontShowApkBtn = document.getElementById('apk-dont-show');
 
     function checkApkPopup() {
-        if (!apkPopup) return;
+        if (!apkPopup) {
+            console.log('[APK POPUP] Elemento não encontrado no DOM.');
+            return;
+        }
 
-        // Verifica se o usuário já marcou para não mostrar hoje
         const lastDismiss = localStorage.getItem('apk_popup_dismissed_date');
         const today = new Date().toDateString();
 
-        if (lastDismiss === today) return;
+        console.log('[APK POPUP] Verificando... Último descarte:', lastDismiss, 'Hoje:', today);
 
-        // Mostra o popup para todos os dispositivos após 8 segundos
+        if (lastDismiss === today) {
+            console.log('[APK POPUP] Já descartado hoje. Não será exibido.');
+            return;
+        }
+
+        console.log('[APK POPUP] Agendando exibição para daqui a 8 segundos...');
+
         setTimeout(() => {
-            apkPopup.classList.add('show');
+            console.log('[APK POPUP] Exibindo agora!');
+            // Força o display pois via CSS ele pode estar com display:none inicial
+            apkPopup.style.display = 'block';
 
-            // Se estiver no TV Mode, coloca o foco no botão de fechar para facilitar a navegação por controle
-            if (window.tvModeActive && closeApkBtn) {
-                closeApkBtn.focus();
-            }
+            // Pequeno delay para a transição de opacidade/transform funcionar
+            setTimeout(() => {
+                apkPopup.classList.add('show');
+
+                if (window.tvModeActive && closeApkBtn) {
+                    console.log('[APK POPUP] TV Mode detectado, focando botão de fechar.');
+                    closeApkBtn.focus();
+                }
+            }, 50);
         }, 8000);
     }
 
