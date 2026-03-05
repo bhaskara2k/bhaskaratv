@@ -239,6 +239,8 @@ document.addEventListener('DOMContentLoaded', () => {
         videoPlayer.onloadedmetadata = null; // Clear previous listener
 
         let hasSeeked = false;
+        let errorRetries = 0;
+        const MAX_ERROR_RETRIES = 3;
 
         const performSeek = () => {
             if (!hasSeeked) {
@@ -329,17 +331,27 @@ document.addEventListener('DOMContentLoaded', () => {
         };
 
         videoPlayer.onerror = (e) => {
-            console.error("ERRO NO PLAYER: Falha ao carregar", program.url);
+            console.error("ERRO NO PLAYER: Falha ao carregar", program.url, `(tentativa ${errorRetries + 1}/${MAX_ERROR_RETRIES})`);
+            errorRetries++;
 
-            // RECUPERAÇÃO AGRESSIVA: Se falhou com CORS, limpa tudo e tenta sem
+            // Se excedeu o limite de tentativas, desiste e mostra fallback
+            if (errorRetries >= MAX_ERROR_RETRIES) {
+                console.error("RECOVERY: Número máximo de tentativas atingido. Exibindo tela de fallback.");
+                showFallback();
+                return;
+            }
+
+            // RECUPERAÇÃO: Se falhou com CORS, limpa tudo e tenta sem
             if (videoPlayer.hasAttribute('crossorigin')) {
                 console.log("RECOVERY: Falha de CORS detectada. Tentando modo de compatibilidade (Sem Ambilight)...");
                 videoPlayer.removeAttribute('crossorigin');
                 videoPlayer.src = ""; // Force clear
+                const retryDelay = errorRetries * 2000; // Backoff: 2s, 4s...
+                console.log(`RECOVERY: Aguardando ${retryDelay}ms antes de nova tentativa...`);
                 setTimeout(() => {
                     videoPlayer.src = program.url;
                     videoPlayer.load();
-                }, 100);
+                }, retryDelay);
             } else {
                 showFallback();
             }
