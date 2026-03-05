@@ -239,6 +239,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         <p class="text-sm text-indigo-300 opacity-60 mb-2 italic line-clamp-1">${prog.description || 'Sem descrição'}</p>
                         <div class="flex gap-3 flex-wrap">
                              <span class="text-[10px] font-black px-3 py-1.5 rounded-full bg-white/5 border border-white/5 uppercase tracking-widest">${prog.duration} MIN</span>
+                             <span class="text-[10px] font-black px-3 py-1.5 rounded-full bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 uppercase tracking-widest">${prog.category || 'PADRÃO'}</span>
                              ${dateDisplay}
                         </div>
                     </div>
@@ -365,6 +366,7 @@ document.addEventListener('DOMContentLoaded', () => {
             url: document.getElementById('prog-url').value,
             startTime: document.getElementById('prog-start').value,
             duration: parseInt(document.getElementById('prog-duration').value),
+            category: document.getElementById('prog-category').value,
             days: specificDate ? [] : selectedDays,
             date: specificDate || null
         };
@@ -415,6 +417,7 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('prog-start').value = prog.startTime;
         document.getElementById('prog-duration').value = prog.duration;
         document.getElementById('prog-date').value = prog.date || '';
+        document.getElementById('prog-category').value = prog.category || 'default';
 
         // Checkboxes
         document.querySelectorAll('input[name="prog-days"]').forEach(cb => {

@@ -504,7 +504,20 @@ document.addEventListener('DOMContentLoaded', () => {
         if (controlTime) controlTime.textContent = "--:--";
     }
 
-    function getBadge(title) {
+    function getBadge(prog) {
+        // Se houver categoria explicativa, use-a primeiro
+        if (prog && typeof prog === 'object' && prog.category) {
+            const cat = prog.category;
+            if (cat === 'anime') return '<span class="badge badge-anime">Anime</span>';
+            if (cat === 'series') return '<span class="badge badge-series">Série</span>';
+            if (cat === 'movie') return '<span class="badge badge-movie">Cinema</span>';
+            if (cat === 'news') return '<span class="badge badge-news">Jornalismo</span>';
+            if (cat === 'cartoon') return '<span class="badge badge-cartoon">Desenho</span>';
+            if (cat === 'default') return '<span class="badge badge-default">Programa</span>';
+        }
+
+        // Fallback para detecção baseada no título
+        const title = typeof prog === 'string' ? prog : (prog ? prog.title : '');
         const t = title.toLowerCase();
         if (t.includes('naruto') || t.includes('pokemon') || t.includes('fairy tail') || t.includes('desenho') || t.includes('anime')) return '<span class="badge badge-anime">Anime</span>';
         if (t.includes('news') || t.includes('notícia') || t.includes('jornal')) return '<span class="badge badge-news">Jornalismo</span>';
@@ -586,7 +599,7 @@ document.addEventListener('DOMContentLoaded', () => {
             card.innerHTML = `
                 <div class="card-time">${prog.startTime} &mdash; ${endTimeStr}</div>
                 <div class="card-badges">
-                    ${getBadge(prog.title)}
+                    ${getBadge(prog)}
                     ${isLive ? '<span class="live-chip"><span class="live-chip-dot"></span>No Ar</span>' : ''}
                     ${isNext ? '<span class="next-chip">A Seguir</span>' : ''}
                 </div>
@@ -852,7 +865,7 @@ document.addEventListener('DOMContentLoaded', () => {
             card.innerHTML = `
                 <div class="card-time">${prog.startTime} &mdash; ${endTimeStr}</div>
                 <div class="card-badges">
-                    ${getBadge(prog.title)}
+                    ${getBadge(prog)}
                     ${isLive ? '<span class="live-chip"><span class="live-chip-dot"></span>Ao Vivo</span>' : ''}
                 </div>
                 <div class="card-title" style="font-size:1rem;">${prog.title}</div>
