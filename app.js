@@ -256,10 +256,10 @@ document.addEventListener('DOMContentLoaded', () => {
                         }
                     }).catch(e => {
                         console.log("Autoplay bloqueado ou erro. Overlay ativo.");
-                        unmuteOverlay.classList.remove('hidden');
+                        if (unmuteOverlay) unmuteOverlay.style.display = 'flex';
                     });
                 } else {
-                    videoPlayer.play().catch(() => unmuteOverlay.classList.remove('hidden'));
+                    videoPlayer.play().catch(() => { if (unmuteOverlay) unmuteOverlay.style.display = 'flex'; });
                 }
             }
         };
@@ -578,8 +578,8 @@ document.addEventListener('DOMContentLoaded', () => {
     if (unmuteOverlay && videoPlayer) {
         unmuteOverlay.addEventListener('click', () => {
             videoPlayer.muted = false;
-            unmuteOverlay.classList.add('hidden');
-            if (typeof updateMuteUI === 'function') updateMuteUI();
+            unmuteOverlay.style.display = 'none'; // direto, sem depender de classe CSS
+            updateMuteUI();
             videoPlayer.play().catch(e => console.warn("Erro ao dar play após clique:", e));
         });
     }
@@ -587,8 +587,8 @@ document.addEventListener('DOMContentLoaded', () => {
     if (toggleMuteBtn && videoPlayer) {
         toggleMuteBtn.addEventListener('click', () => {
             videoPlayer.muted = !videoPlayer.muted;
-            if (typeof updateMuteUI === 'function') updateMuteUI();
-            if (unmuteOverlay) unmuteOverlay.classList.add('hidden');
+            updateMuteUI();
+            if (unmuteOverlay) unmuteOverlay.style.display = 'none';
         });
     }
 
@@ -697,20 +697,13 @@ document.addEventListener('DOMContentLoaded', () => {
     function openModal(modal) { if (modal) modal.classList.add('open'); }
     function closeModal(modal) { if (modal) modal.classList.remove('open'); }
 
-    // Modal Catalog Logic
+    // Modal Catalog: openCatalogBtn já aponta para o botão do header
     if (openCatalogBtn && catalogModal) openCatalogBtn.addEventListener('click', () => openModal(catalogModal));
-    if (openCatalogHeaderBtn && catalogModal) openCatalogHeaderBtn.addEventListener('click', () => openModal(catalogModal));
     if (closeCatalogBtn && catalogModal) closeCatalogBtn.addEventListener('click', () => closeModal(catalogModal));
 
-    // Modal Full Schedule Logic
+    // Modal Full Schedule
     if (openFullScheduleBtn && fullScheduleModal) {
         openFullScheduleBtn.addEventListener('click', () => {
-            renderWeeklySchedule(new Date().getDay());
-            openModal(fullScheduleModal);
-        });
-    }
-    if (openFullScheduleHeaderBtn && fullScheduleModal) {
-        openFullScheduleHeaderBtn.addEventListener('click', () => {
             renderWeeklySchedule(new Date().getDay());
             openModal(fullScheduleModal);
         });
