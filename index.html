@@ -4,119 +4,376 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bhaskara TV - Entretenimento Linear</title>
+    <title>Bhaskara TV — Canal Linear de Entretenimento</title>
+    <meta name="description"
+        content="Bhaskara TV — Seu canal de entretenimento linear com programação 24h de anime, séries e filmes.">
     <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#6366f1">
+    <meta name="theme-color" content="#7c3aed">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <link rel="icon" type="image/png" href="pwa-icon.png">
     <script src="https://cdn.tailwindcss.com"></script>
     <link
-        href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&family=JetBrains+Mono:wght@400;700&display=swap"
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;700&display=swap"
         rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
 
     <!-- Firebase SDKs -->
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+
     <style>
+        /* ========== TOKENS ========== */
         :root {
-            --accent: #6366f1;
-            --accent-glow: rgba(99, 102, 241, 0.4);
-            --bg-dark: #050505;
+            --c-bg: #08070f;
+            --c-surface: #0f0d1a;
+            --c-border: rgba(255, 255, 255, 0.07);
+            --accent: #7c3aed;
+            --accent-2: #c026d3;
+            --accent-cyan: #06b6d4;
+            --glow-v: rgba(124, 58, 237, 0.45);
+            --glow-m: rgba(192, 38, 211, 0.35);
+            --glow-c: rgba(6, 182, 212, 0.3);
+        }
+
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
         }
 
         body {
-            font-family: 'Outfit', sans-serif;
-            background: var(--bg-dark);
-            color: white;
+            font-family: 'Inter', sans-serif;
+            background: var(--c-bg);
+            color: #e8e6f0;
             margin: 0;
             overflow-x: hidden;
+            min-height: 100vh;
         }
 
-        /* Cinematic Effects */
-        .mesh-gradient {
+        /* ========== ANIMATED BACKGROUND ========== */
+        .bg-canvas {
             position: fixed;
             inset: 0;
-            background:
-                radial-gradient(at 0% 0%, rgba(99, 102, 241, 0.15) 0px, transparent 50%),
-                radial-gradient(at 100% 100%, rgba(168, 85, 247, 0.15) 0px, transparent 50%),
-                radial-gradient(at 100% 0%, rgba(59, 130, 246, 0.1) 0px, transparent 50%);
-            z-index: -1;
+            z-index: 0;
             pointer-events: none;
+            overflow: hidden;
         }
 
-        .noise {
-            position: fixed;
-            inset: 0;
-            z-index: 9999;
-            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
-            opacity: 0.03;
-            pointer-events: none;
+        .orb {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(120px);
+            opacity: 0;
+            animation: orbFloat 18s ease-in-out infinite;
         }
 
-        .premium-bg {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: -1;
-            background: linear-gradient(45deg, rgba(79, 70, 229, 0.05) 0%, transparent 100%);
-            animation: bgShift 15s infinite alternate ease-in-out;
+        .orb-1 {
+            width: 600px;
+            height: 600px;
+            background: radial-gradient(circle, rgba(124, 58, 237, 0.22), transparent 70%);
+            top: -150px;
+            left: -150px;
+            animation-delay: 0s;
         }
 
-        @keyframes bgShift {
+        .orb-2 {
+            width: 500px;
+            height: 500px;
+            background: radial-gradient(circle, rgba(192, 38, 211, 0.18), transparent 70%);
+            top: 20%;
+            right: -100px;
+            animation-delay: -6s;
+        }
+
+        .orb-3 {
+            width: 400px;
+            height: 400px;
+            background: radial-gradient(circle, rgba(6, 182, 212, 0.14), transparent 70%);
+            bottom: -100px;
+            left: 30%;
+            animation-delay: -12s;
+        }
+
+        @keyframes orbFloat {
             0% {
-                transform: scale(1) translate(0, 0);
+                opacity: 0;
+                transform: translate(0, 0) scale(1);
+            }
+
+            15% {
+                opacity: 1;
+            }
+
+            50% {
+                transform: translate(40px, 30px) scale(1.1);
+            }
+
+            85% {
+                opacity: 1;
             }
 
             100% {
-                transform: scale(1.1) translate(20px, 10px);
+                opacity: 0;
+                transform: translate(0, 0) scale(1);
             }
         }
 
-        .glass {
-            background: rgba(255, 255, 255, 0.03);
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+        .noise-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 1;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+            opacity: 0.025;
+            pointer-events: none;
         }
 
-        .tv-screen {
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8);
+        /* ========== SAFE AREA ========== */
+        .safe-area {
             position: relative;
-            overflow: hidden;
-            aspect-ratio: 16 / 9;
-            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 2;
+            padding: 0 max(1.5rem, 3vw);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
         }
 
-        .tv-screen::before {
-            content: "";
-            position: absolute;
+        /* ========== HEADER ========== */
+        .site-header {
+            position: fixed;
             top: 0;
             left: 0;
             right: 0;
-            bottom: 0;
-            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.1) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03));
-            z-index: 5;
-            background-size: 100% 4px, 3px 100%;
-            pointer-events: none;
-            opacity: 0.3;
-        }
-
-        .watermark {
-            position: absolute;
-            top: 2rem;
-            right: 2rem;
-            opacity: 0.4;
+            z-index: 200;
+            padding: 1rem max(1.5rem, 3vw);
             display: flex;
             align-items: center;
-            gap: 10px;
-            filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.5));
+            justify-content: space-between;
+            background: rgba(8, 7, 15, 0.7);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border-bottom: 1px solid rgba(124, 58, 237, 0.12);
+            transition: all 0.4s ease;
+        }
+
+        .site-header::after {
+            content: '';
+            position: absolute;
+            bottom: -1px;
+            left: 15%;
+            right: 15%;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--accent), var(--accent-2), transparent);
+            opacity: 0.6;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            text-decoration: none;
+        }
+
+        .brand-icon {
+            width: 36px;
+            height: 36px;
+            background: linear-gradient(135deg, var(--accent), var(--accent-2));
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 0 20px var(--glow-v);
+            flex-shrink: 0;
+        }
+
+        .brand-name {
+            font-size: 1.2rem;
+            font-weight: 900;
+            letter-spacing: -0.04em;
+            background: linear-gradient(135deg, #fff 30%, rgba(124, 58, 237, 0.9) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .header-nav {
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+
+        .nav-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: rgba(255, 255, 255, 0.45);
+            font-size: 0.8rem;
+            font-weight: 600;
+            letter-spacing: 0.02em;
+            padding: 0.5rem 1rem;
+            border-radius: 9999px;
+            transition: all 0.25s ease;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .nav-btn:hover {
+            color: #fff;
+            background: rgba(255, 255, 255, 0.07);
+        }
+
+        .nav-btn.active {
+            color: #fff;
+            background: rgba(124, 58, 237, 0.15);
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .digital-clock {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: rgba(255, 255, 255, 0.55);
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            padding: 0.4rem 0.9rem;
+            border-radius: 9999px;
+            letter-spacing: 0.05em;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .clock-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--accent);
+            box-shadow: 0 0 8px var(--glow-v);
+            animation: pulseDot 2s ease infinite;
+        }
+
+        @keyframes pulseDot {
+
+            0%,
+            100% {
+                opacity: 1;
+                box-shadow: 0 0 8px var(--glow-v);
+            }
+
+            50% {
+                opacity: 0.4;
+                box-shadow: 0 0 3px var(--glow-v);
+            }
+        }
+
+        .live-badge {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            background: linear-gradient(135deg, rgba(220, 38, 38, 0.25), rgba(185, 28, 28, 0.2));
+            border: 1px solid rgba(220, 38, 38, 0.3);
+            padding: 0.4rem 0.85rem;
+            border-radius: 9999px;
+            font-size: 0.7rem;
+            font-weight: 800;
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
+            color: #fca5a5;
+        }
+
+        .live-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: #ef4444;
+            box-shadow: 0 0 8px rgba(239, 68, 68, 0.8);
+            animation: livePulse 1.4s ease-in-out infinite;
+        }
+
+        @keyframes livePulse {
+
+            0%,
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+
+            50% {
+                transform: scale(1.4);
+                opacity: 0.6;
+            }
+        }
+
+        /* ========== MAIN CONTENT ========== */
+        main {
+            padding-top: 90px;
+            flex-grow: 1;
+            max-width: 1280px;
+            margin: 0 auto;
+            width: 100%;
+            padding-bottom: 4rem;
+        }
+
+        /* ========== PLAYER WRAPPER ========== */
+        .player-wrapper {
+            position: relative;
+            margin-bottom: 3rem;
+        }
+
+        /* Animated gradient border around the player */
+        .player-glow-ring {
+            position: absolute;
+            inset: -2px;
+            border-radius: 1.25rem;
+            background: linear-gradient(135deg, var(--accent), var(--accent-2), var(--accent-cyan), var(--accent));
+            background-size: 300% 300%;
+            animation: borderFlow 6s linear infinite;
+            z-index: 0;
+            opacity: 0.6;
+        }
+
+        @keyframes borderFlow {
+            0% {
+                background-position: 0% 50%;
+            }
+
+            50% {
+                background-position: 100% 50%;
+            }
+
+            100% {
+                background-position: 0% 50%;
+            }
+        }
+
+        #player-container {
+            position: relative;
+            z-index: 1;
+            aspect-ratio: 16 / 9;
+            background: #000;
+            border-radius: 1.15rem;
+            overflow: hidden;
+            box-shadow:
+                0 30px 60px -12px rgba(0, 0, 0, 0.9),
+                0 0 80px -20px var(--glow-v);
+        }
+
+        /* Scanline overlay on the screen */
+        #player-container::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: repeating-linear-gradient(0deg,
+                    transparent,
+                    transparent 3px,
+                    rgba(0, 0, 0, 0.04) 3px,
+                    rgba(0, 0, 0, 0.04) 4px);
+            z-index: 15;
             pointer-events: none;
-            z-index: 10;
         }
 
         .no-signal {
@@ -127,375 +384,91 @@
             width: 100%;
         }
 
-        .pulse-live {
-            animation: pulse 2s infinite;
-        }
-
-        @keyframes pulse {
-            0% {
-                box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4);
-            }
-
-            70% {
-                box-shadow: 0 0 0 10px rgba(239, 68, 68, 0);
-            }
-
-            100% {
-                box-shadow: 0 0 0 0 rgba(239, 68, 68, 0);
-            }
-        }
-
-        .digital-clock {
-            font-family: 'JetBrains Mono', monospace;
-            letter-spacing: -0.05em;
-            background: rgba(0, 0, 0, 0.3);
-            box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.2);
-            text-shadow: 0 0 10px rgba(255, 255, 255, 0.1);
-        }
-
-        .live-tag {
-            background: linear-gradient(90deg, #ef4444, #b91c1c);
-            box-shadow: 0 0 15px rgba(239, 68, 68, 0.3);
-        }
-
         video::-webkit-media-controls {
             display: none !important;
         }
 
-        .custom-controls {
-            transition: opacity 0.6s ease, visibility 0.6s ease;
-            z-index: 100 !important;
-            pointer-events: auto;
-            opacity: 0;
-            visibility: hidden;
-        }
-
-        /* Fora do fullscreen: aparecer no hover do grupo pai */
-        :not(:fullscreen) .group:hover .custom-controls {
-            opacity: 1;
-            visibility: visible;
-        }
-
-        /* Dentro do fullscreen: visível por padrão (JS controla o hide) */
-        :fullscreen .custom-controls {
-            opacity: 1;
-            visibility: visible;
-        }
-
-        /* Classe aplicada diretamente pelo JS nos elementos alvo.
-           Usa !important para sobrescrever qualquer regra :fullscreen */
-        .fs-hidden {
-            opacity: 0 !important;
-            visibility: hidden !important;
-            pointer-events: none !important;
-            transition: opacity 0.6s ease, visibility 0.6s ease !important;
-        }
-
-
-        .coming-next-toast {
-            position: absolute;
-            bottom: 6rem;
-            right: 2rem;
-            transform: translateX(120%);
-            transition: transform 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-            z-index: 20;
-        }
-
-        .coming-next-toast.show {
-            transform: translateX(0);
-        }
-
-        /* Badge Styles */
-        .badge {
-            font-size: 0.65rem;
-            font-weight: 800;
-            padding: 2px 8px;
-            border-radius: 4px;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-        }
-
-        .badge-anime {
-            background: #f59e0b;
-            color: #000;
-        }
-
-        .badge-series {
-            background: #8b5cf6;
-            color: #fff;
-        }
-
-        .badge-news {
-            background: #3b82f6;
-            color: #fff;
-        }
-
-        .badge-movie {
-            background: #ef4444;
-            color: #fff;
-        }
-
-        .badge-default {
-            background: rgba(255, 255, 255, 0.1);
-            color: rgba(255, 255, 255, 0.7);
-        }
-
-        /* Progress Bar for Schedule */
-        .schedule-progress {
-            height: 3px;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 2px;
-            overflow: hidden;
-            margin-top: 12px;
-        }
-
-        .schedule-progress-bar {
-            height: 100%;
-            background: linear-gradient(90deg, #6366f1, #a855f7);
-            width: 0%;
-            transition: width 1s linear;
-        }
-
-        .program-card {
-            transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
-            position: relative;
-            z-index: 1;
-        }
-
-        .program-card::after {
-            content: '';
-            position: absolute;
-            inset: 0;
-            border-radius: inherit;
-            background: linear-gradient(135deg, rgba(255, 255, 255, 0.05), transparent);
-            z-index: -1;
-            opacity: 0;
-            transition: opacity 0.4s ease;
-        }
-
-        .program-card:hover {
-            transform: translateY(-8px) scale(1.02);
-            background: rgba(255, 255, 255, 0.08);
-            border-color: rgba(99, 102, 241, 0.4) !important;
-            box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.5);
-        }
-
-        .program-card:hover::after {
-            opacity: 1;
-        }
-
-        /* Staggered Entrance */
-        @keyframes cardReveal {
-            from {
-                opacity: 0;
-                transform: translateY(20px);
-            }
-
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        .reveal-node {
-            animation: cardReveal 0.6s cubic-bezier(0.23, 1, 0.32, 1) forwards;
-            opacity: 0;
-        }
-
-        .program-card.live {
-            background: rgba(99, 102, 241, 0.08);
-            border-color: rgba(99, 102, 241, 0.4) !important;
-            box-shadow: 0 0 30px -5px rgba(99, 102, 241, 0.3);
-        }
-
-        .program-card.live::before {
-            content: '';
-            position: absolute;
-            top: -2px;
-            left: -2px;
-            right: -2px;
-            bottom: -2px;
-            background: linear-gradient(45deg, #6366f1, transparent, #a855f7);
-            z-index: -2;
-            border-radius: inherit;
-            opacity: 0.3;
-        }
-
-        .program-card.past {
-            opacity: 0.4;
-            filter: grayscale(0.8) blur(0.5px);
-        }
-
-        /* Tab Pill Styles */
-        .day-tab {
-            padding: 0.75rem 1.5rem;
-            border-radius: 9999px;
-            font-weight: 700;
-            font-size: 0.875rem;
-            cursor: pointer;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            background: rgba(255, 255, 255, 0.03);
-            color: rgba(255, 255, 255, 0.5);
-            white-space: nowrap;
-        }
-
-        .day-tab:hover {
-            background: rgba(255, 255, 255, 0.08);
-            color: white;
-            transform: translateY(-2px);
-            border-color: rgba(255, 255, 255, 0.2);
-        }
-
-        .day-tab.active {
-            background: var(--accent) !important;
-            color: white !important;
-            border-color: var(--accent) !important;
-            box-shadow: 0 10px 25px -5px var(--accent-glow);
-            opacity: 1 !important;
-            transform: none !important;
-            cursor: default;
-        }
-
-        .day-tab:focus {
-            outline: none !important;
-        }
-
-        .day-tab:focus-visible {
-            background: rgba(99, 102, 241, 0.2) !important;
-            box-shadow: 0 0 0 3px var(--accent) !important;
-            color: white;
-        }
-
-        /* TV Mode Adjustments */
-        @media (min-width: 1400px) {
-            :root {
-                font-size: 18px;
-            }
-        }
-
-        body {
-            background-color: #050505;
-            overflow-x: hidden;
-            min-height: 100vh;
-        }
-
-        /* Safe Zone Container */
-        .safe-area {
-            padding: 2vh 4vw;
-            width: 100%;
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-        }
-
-        /* Floating Header for TV */
-        .tv-header {
-            margin-bottom: 2rem;
-            border-radius: 1.5rem !important;
-            background: rgba(255, 255, 255, 0.03) !important;
-            backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.08) !important;
-            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.5);
-        }
-
-        /* Remote Control Navigation Focus */
-        /* Remote Control Navigation Focus */
-        :focus-visible {
-            outline: 4px solid #6366f1 !important;
-            outline-offset: 4px;
-            transform: scale(1.05);
-            background: rgba(99, 102, 241, 0.2) !important;
-            box-shadow: 0 0 20px rgba(99, 102, 241, 0.4);
-            z-index: 50;
-        }
-
-        /* Prevent ugly outline on mouse click for specific elements */
-        :focus:not(:focus-visible) {
-            outline: none !important;
-            box-shadow: none !important;
-            transform: none !important;
-        }
-
+        /* ========== AMBIENT LIGHT ========== */
         #ambient-light {
             position: absolute;
-            inset: -50px;
-            filter: blur(100px);
+            inset: -60px;
+            filter: blur(120px);
             z-index: -1;
-            opacity: 0.5;
-            transition: background 1s ease;
+            opacity: 0.45;
+            transition: background 1.2s ease;
             pointer-events: none;
-            /* Não bloquear cliques */
         }
 
-        /* Custom Volume Slider */
-        input[type=range] {
-            -webkit-appearance: none;
-            appearance: none;
-            background: transparent;
+        /* ========== WATERMARK ========== */
+        .watermark {
+            position: absolute;
+            top: 1.25rem;
+            right: 1.25rem;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            opacity: 0.5;
+            pointer-events: none;
+            z-index: 20;
+            filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.6));
         }
 
-        input[type=range]::-webkit-slider-runnable-track {
-            height: 4px;
-            background: rgba(255, 255, 255, 0.2);
-            border-radius: 2px;
+        .watermark img {
+            width: 26px;
+            height: 26px;
         }
 
-        input[type=range]::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            appearance: none;
-            height: 12px;
-            width: 12px;
-            border-radius: 50%;
-            background: #6366f1;
-            margin-top: -4px;
-            box-shadow: 0 0 10px rgba(99, 102, 241, 0.5);
-            cursor: pointer;
+        .watermark span {
+            font-size: 0.9rem;
+            font-weight: 800;
+            letter-spacing: -0.03em;
+            color: #fff;
         }
 
-        /* Custom Circular Scrollbar for Premium Feel */
-        .custom-scrollbar::-webkit-scrollbar {
-            width: 6px;
+        /* ========== VIDEO OVERLAY (program info top-left) ========== */
+        #video-overlay {
+            position: absolute;
+            top: 1.25rem;
+            left: 1.25rem;
+            z-index: 20;
+            pointer-events: none;
         }
 
-        .custom-scrollbar::-webkit-scrollbar-track {
-            background: rgba(255, 255, 255, 0.02);
-            border-radius: 10px;
-            margin: 10px 0;
+        .overlay-pill {
+            display: inline-flex;
+            flex-direction: column;
+            gap: 2px;
+            background: rgba(8, 7, 15, 0.75);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(124, 58, 237, 0.3);
+            border-left: 3px solid var(--accent);
+            padding: 0.5rem 0.85rem;
+            border-radius: 0.5rem;
+            box-shadow: 0 0 20px rgba(124, 58, 237, 0.15);
         }
 
-        .custom-scrollbar::-webkit-scrollbar-thumb {
-            background: linear-gradient(to bottom, transparent, var(--accent), transparent);
-            border-radius: 10px;
-            border: 2px solid transparent;
-            background-clip: content-box;
+        #current-title {
+            font-size: 0.6rem;
+            font-weight: 700;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            color: var(--accent);
+            opacity: 0.85;
         }
 
-        .custom-scrollbar {
-            scrollbar-width: thin;
-            scrollbar-color: var(--accent) transparent;
-            padding-right: 1.5rem !important;
-            /* Prevent cards from touching scrollbar */
-            mask-image: linear-gradient(to bottom, black 95%, transparent 100%);
-            -webkit-mask-image: linear-gradient(to bottom, black 95%, transparent 100%);
+        #current-program-display {
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: #fff;
+            line-height: 1.2;
         }
 
-        /* Prevent Layout Shift */
-        .scrollbar-hide::-webkit-scrollbar {
-            display: none;
-        }
-
-        .scrollbar-hide {
-            -ms-overflow-style: none;
-            scrollbar-width: none;
-        }
-
-        /* Fullscreen UI (Inside Player) */
+        /* ========== FULLSCREEN UI ========== */
         .fullscreen-ui {
             position: absolute;
-            top: 2rem;
-            left: 2rem;
-            right: 2rem;
+            top: 1.5rem;
+            left: 1.5rem;
+            right: 1.5rem;
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -503,7 +476,7 @@
             pointer-events: none;
             opacity: 1;
             visibility: visible;
-            transition: opacity 0.8s ease, visibility 0.8s ease;
+            transition: opacity 0.6s ease, visibility 0.6s ease;
         }
 
         .fullscreen-ui * {
@@ -514,336 +487,1117 @@
             display: none !important;
         }
 
-        :fullscreen .tv-screen {
-            border: none !important;
-            border-radius: 0 !important;
+        .fs-brand {
+            font-size: 1.3rem;
+            font-weight: 900;
+            letter-spacing: -0.04em;
+            text-shadow: 0 0 20px rgba(124, 58, 237, 0.5);
         }
 
-        /* O sistema de auto-hide agora usa [data-fs-hide] no #player-container */
-        /* Ver regras .custom-controls acima */
+        /* ========== CUSTOM CONTROLS ========== */
+        .custom-controls {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 3rem 2rem 1.5rem;
+            background: linear-gradient(to top, rgba(0, 0, 0, 0.95) 0%, rgba(0, 0, 0, 0.6) 50%, transparent 100%);
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            z-index: 40;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.6s ease, visibility 0.6s ease;
+        }
 
-        .tv-header,
-        .custom-controls,
-        .coming-next-toast,
-        #video-overlay,
-        .fullscreen-ui {
-            transition: opacity 0.6s ease, visibility 0.6s ease, transform 0.6s ease !important;
+        :not(:fullscreen) .group:hover .custom-controls {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        :fullscreen .custom-controls {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .fs-hidden {
+            opacity: 0 !important;
+            visibility: hidden !important;
+            pointer-events: none !important;
+            transition: opacity 0.6s ease, visibility 0.6s ease !important;
+        }
+
+        .ctrl-title {
+            font-size: 1.4rem;
+            font-weight: 800;
+            letter-spacing: -0.03em;
+            color: #fff;
+            line-height: 1.2;
+        }
+
+        .ctrl-time {
+            font-size: 0.75rem;
+            color: rgba(255, 255, 255, 0.45);
+            font-family: 'JetBrains Mono', monospace;
+            margin-top: 0.25rem;
+        }
+
+        .ctrl-btn {
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            background: rgba(255, 255, 255, 0.07);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+            backdrop-filter: blur(8px);
+        }
+
+        .ctrl-btn:hover {
+            background: rgba(255, 255, 255, 0.15);
+            border-color: rgba(255, 255, 255, 0.25);
+            transform: scale(1.08);
+        }
+
+        .ctrl-btn:active {
+            transform: scale(0.95);
+        }
+
+        .ctrl-btn svg {
+            width: 18px;
+            height: 18px;
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        .ctrl-btn-primary {
+            background: linear-gradient(135deg, var(--accent), var(--accent-2));
+            border-color: transparent;
+            box-shadow: 0 0 20px var(--glow-v);
+        }
+
+        .ctrl-btn-primary:hover {
+            box-shadow: 0 0 30px var(--glow-v), 0 0 15px var(--glow-m);
+            transform: scale(1.1);
+        }
+
+        .volume-wrap {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            padding: 0.4rem 0.8rem;
+            border-radius: 9999px;
+        }
+
+        .volume-wrap svg {
+            width: 14px;
+            height: 14px;
+            color: rgba(255, 255, 255, 0.4);
+        }
+
+        input[type=range] {
+            -webkit-appearance: none;
+            appearance: none;
+            background: transparent;
+            width: 80px;
+        }
+
+        input[type=range]::-webkit-slider-runnable-track {
+            height: 3px;
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 2px;
+        }
+
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            height: 11px;
+            width: 11px;
+            border-radius: 50%;
+            background: #fff;
+            margin-top: -4px;
+            box-shadow: 0 0 6px rgba(124, 58, 237, 0.5);
+            cursor: pointer;
+        }
+
+        /* ========== UNMUTE OVERLAY ========== */
+        #unmute-overlay {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(8, 7, 15, 0.5);
+            backdrop-filter: blur(8px);
+            cursor: pointer;
+            z-index: 50;
+        }
+
+        .unmute-btn {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .unmute-icon {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--accent), var(--accent-2));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 0 40px var(--glow-v), 0 0 80px var(--glow-m);
+            animation: unmutePop 2s ease-in-out infinite;
+        }
+
+        @keyframes unmutePop {
+
+            0%,
+            100% {
+                transform: scale(1);
+                box-shadow: 0 0 40px var(--glow-v), 0 0 80px var(--glow-m);
+            }
+
+            50% {
+                transform: scale(1.06);
+                box-shadow: 0 0 60px var(--glow-v), 0 0 100px var(--glow-m);
+            }
+        }
+
+        .unmute-icon svg {
+            width: 36px;
+            height: 36px;
+            color: #fff;
+        }
+
+        .unmute-label {
+            font-size: 1rem;
+            font-weight: 600;
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        /* ========== COMING NEXT TOAST ========== */
+        .coming-next-toast {
+            position: absolute;
+            bottom: 5.5rem;
+            right: 1.5rem;
+            transform: translateX(120%);
+            transition: transform 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            z-index: 25;
+            background: rgba(8, 7, 15, 0.85);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(124, 58, 237, 0.25);
+            border-left: 3px solid var(--accent-2);
+            padding: 0.75rem 1rem;
+            border-radius: 0.75rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5), 0 0 20px rgba(192, 38, 211, 0.15);
+            max-width: 260px;
+        }
+
+        .coming-next-toast.show {
+            transform: translateX(0);
+        }
+
+        .toast-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            background: rgba(192, 38, 211, 0.15);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .toast-icon svg {
+            width: 18px;
+            height: 18px;
+            color: #e879f9;
+        }
+
+        .toast-label {
+            font-size: 0.6rem;
+            font-weight: 700;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            color: #e879f9;
+            margin-bottom: 2px;
+        }
+
+        #next-title {
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: #fff;
+            line-height: 1.3;
+        }
+
+        /* ========== SECTION HEADERS ========== */
+        .section-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1.5rem;
+        }
+
+        .section-title {
+            font-size: 1.3rem;
+            font-weight: 800;
+            letter-spacing: -0.03em;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+        }
+
+        .section-title-accent {
+            display: inline-block;
+            width: 4px;
+            height: 20px;
+            border-radius: 2px;
+            background: linear-gradient(180deg, var(--accent), var(--accent-2));
+            box-shadow: 0 0 10px var(--glow-v);
+        }
+
+        #current-day {
+            font-size: 0.72rem;
+            font-weight: 600;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: rgba(255, 255, 255, 0.3);
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            padding: 0.3rem 0.8rem;
+            border-radius: 9999px;
+        }
+
+        /* ========== PROGRAM CARDS ========== */
+        #schedule-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+            gap: 1rem;
+        }
+
+        .program-card {
+            position: relative;
+            background: var(--c-surface);
+            border: 1px solid var(--c-border);
+            border-radius: 1rem;
+            padding: 1.15rem;
+            transition: all 0.35s cubic-bezier(0.23, 1, 0.32, 1);
+            overflow: hidden;
+            cursor: default;
+        }
+
+        .program-card::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: inherit;
+            background: linear-gradient(135deg, rgba(124, 58, 237, 0.05), transparent 60%);
+            opacity: 0;
+            transition: opacity 0.35s ease;
+        }
+
+        .program-card:hover {
+            transform: translateY(-5px);
+            border-color: rgba(124, 58, 237, 0.3);
+            box-shadow: 0 12px 40px -8px rgba(0, 0, 0, 0.7), 0 0 20px -5px var(--glow-v);
+        }
+
+        .program-card:hover::before {
+            opacity: 1;
+        }
+
+        .program-card.live {
+            border-color: rgba(124, 58, 237, 0.4);
+            background: linear-gradient(135deg, rgba(124, 58, 237, 0.08), var(--c-surface));
+            box-shadow: 0 0 0 1px rgba(124, 58, 237, 0.2), 0 0 30px -8px var(--glow-v);
+        }
+
+        .program-card.live::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, var(--accent), var(--accent-2));
+            border-radius: 1rem 1rem 0 0;
+        }
+
+        .program-card.past {
+            opacity: 0.35;
+            filter: grayscale(0.6);
+        }
+
+        /* Badges */
+        .badge {
+            display: inline-block;
+            font-size: 0.58rem;
+            font-weight: 800;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            padding: 2px 7px;
+            border-radius: 4px;
+        }
+
+        .badge-anime {
+            background: rgba(245, 158, 11, 0.18);
+            color: #fbbf24;
+            border: 1px solid rgba(245, 158, 11, 0.25);
+        }
+
+        .badge-series {
+            background: rgba(124, 58, 237, 0.18);
+            color: #a78bfa;
+            border: 1px solid rgba(124, 58, 237, 0.25);
+        }
+
+        .badge-news {
+            background: rgba(59, 130, 246, 0.18);
+            color: #60a5fa;
+            border: 1px solid rgba(59, 130, 246, 0.25);
+        }
+
+        .badge-movie {
+            background: rgba(239, 68, 68, 0.18);
+            color: #f87171;
+            border: 1px solid rgba(239, 68, 68, 0.25);
+        }
+
+        .badge-default {
+            background: rgba(255, 255, 255, 0.06);
+            color: rgba(255, 255, 255, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .live-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            background: rgba(239, 68, 68, 0.12);
+            border: 1px solid rgba(239, 68, 68, 0.25);
+            color: #fca5a5;
+            font-size: 0.58rem;
+            font-weight: 800;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            padding: 2px 7px;
+            border-radius: 4px;
+        }
+
+        .live-chip-dot {
+            width: 5px;
+            height: 5px;
+            border-radius: 50%;
+            background: #ef4444;
+            animation: livePulse 1.4s ease-in-out infinite;
+            box-shadow: 0 0 4px rgba(239, 68, 68, 0.8);
+        }
+
+        .next-chip {
+            display: inline-block;
+            background: rgba(6, 182, 212, 0.12);
+            border: 1px solid rgba(6, 182, 212, 0.25);
+            color: #67e8f9;
+            font-size: 0.58rem;
+            font-weight: 800;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            padding: 2px 7px;
+            border-radius: 4px;
+        }
+
+        .card-time {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.65rem;
+            font-weight: 700;
+            color: rgba(255, 255, 255, 0.3);
+            margin-bottom: 0.5rem;
+        }
+
+        .card-badges {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+            margin-bottom: 0.6rem;
+        }
+
+        .card-title {
+            font-size: 0.9rem;
+            font-weight: 700;
+            color: #fff;
+            line-height: 1.3;
+            margin-bottom: 0.3rem;
+            letter-spacing: -0.01em;
+        }
+
+        .card-desc {
+            font-size: 0.72rem;
+            color: rgba(255, 255, 255, 0.3);
+            line-height: 1.5;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            margin-bottom: 0.75rem;
+        }
+
+        .card-footer {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            padding-top: 0.65rem;
+        }
+
+        .card-duration {
+            font-size: 0.62rem;
+            font-weight: 600;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: rgba(255, 255, 255, 0.2);
+        }
+
+        /* Progress bar */
+        .schedule-progress {
+            height: 2px;
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 1px;
+            overflow: hidden;
+            margin-top: 0.75rem;
+        }
+
+        .schedule-progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent), var(--accent-2));
+            box-shadow: 0 0 8px var(--glow-v);
+            transition: width 1s linear;
+        }
+
+        /* Skeleton loading */
+        .skeleton {
+            background: linear-gradient(90deg, rgba(255, 255, 255, 0.04) 25%, rgba(255, 255, 255, 0.07) 50%, rgba(255, 255, 255, 0.04) 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite;
+            border-radius: 0.75rem;
+        }
+
+        @keyframes shimmer {
+            0% {
+                background-position: 200% 0;
+            }
+
+            100% {
+                background-position: -200% 0;
+            }
+        }
+
+        /* Entrance animation */
+        @keyframes cardReveal {
+            from {
+                opacity: 0;
+                transform: translateY(16px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .reveal-node {
+            animation: cardReveal 0.5s cubic-bezier(0.23, 1, 0.32, 1) forwards;
+            opacity: 0;
+        }
+
+        /* ========== MODAL BASE ========== */
+        .modal-backdrop {
+            position: fixed;
+            inset: 0;
+            z-index: 300;
+            background: rgba(8, 7, 15, 0.88);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            display: flex;
+            align-items: stretch;
+            justify-content: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.4s ease;
+        }
+
+        .modal-backdrop.open {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .modal-inner {
+            width: 100%;
+            max-width: 1440px;
+            display: flex;
+            flex-direction: column;
+            padding: 2rem max(1.5rem, 3vw);
+            overflow: hidden;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 2rem;
+            flex-shrink: 0;
+        }
+
+        .modal-eyebrow {
+            font-size: 0.65rem;
+            font-weight: 700;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            color: var(--accent);
+            margin-bottom: 0.4rem;
+            opacity: 0.85;
+        }
+
+        .modal-title {
+            font-size: clamp(1.8rem, 4vw, 3rem);
+            font-weight: 900;
+            letter-spacing: -0.04em;
+            line-height: 1.05;
+        }
+
+        .modal-subtitle {
+            font-size: 0.9rem;
+            color: rgba(255, 255, 255, 0.35);
+            margin-top: 0.4rem;
+        }
+
+        .modal-close {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.25s ease;
+            flex-shrink: 0;
+        }
+
+        .modal-close:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: rotate(90deg);
+        }
+
+        .modal-close svg {
+            width: 20px;
+            height: 20px;
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        /* ========== CATALOG GRID ========== */
+        .catalog-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 1.25rem;
+            overflow-y: auto;
+            padding-bottom: 4rem;
+        }
+
+        .modal-card {
+            background: var(--c-surface);
+            border: 1px solid var(--c-border);
+            border-radius: 1rem;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .modal-card:hover {
+            border-color: rgba(124, 58, 237, 0.3);
+            transform: translateY(-4px);
+            box-shadow: 0 12px 40px -8px rgba(0, 0, 0, 0.6), 0 0 20px -5px var(--glow-v);
+        }
+
+        .modal-card-banner {
+            height: 180px;
+            background-size: cover;
+            background-position: center;
+        }
+
+        .modal-card-body {
+            padding: 1.1rem;
+        }
+
+        .modal-card-type {
+            display: inline-block;
+            font-size: 0.6rem;
+            font-weight: 800;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            color: var(--accent);
+            background: rgba(124, 58, 237, 0.12);
+            border: 1px solid rgba(124, 58, 237, 0.2);
+            padding: 2px 8px;
+            border-radius: 4px;
+            margin-bottom: 0.5rem;
+        }
+
+        .modal-card-title {
+            font-size: 1.05rem;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+            margin-bottom: 0.4rem;
+        }
+
+        .modal-card-desc {
+            font-size: 0.76rem;
+            color: rgba(255, 255, 255, 0.35);
+            line-height: 1.5;
+        }
+
+        /* ========== WEEKLY SCHEDULE TABS ========== */
+        .day-tabs-wrap {
+            display: flex;
+            gap: 0.4rem;
+            overflow-x: auto;
+            flex-shrink: 0;
+            padding-bottom: 0.25rem;
+            margin-bottom: 1.5rem;
+            scrollbar-width: none;
+        }
+
+        .day-tabs-wrap::-webkit-scrollbar {
+            display: none;
+        }
+
+        .day-tab {
+            flex-shrink: 0;
+            padding: 0.5rem 1.1rem;
+            border-radius: 9999px;
+            font-size: 0.78rem;
+            font-weight: 700;
+            cursor: pointer;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            background: rgba(255, 255, 255, 0.03);
+            color: rgba(255, 255, 255, 0.4);
+            transition: all 0.25s ease;
+            white-space: nowrap;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .day-tab:hover {
+            background: rgba(255, 255, 255, 0.07);
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        .day-tab.active {
+            background: linear-gradient(135deg, var(--accent), var(--accent-2)) !important;
+            color: #fff !important;
+            border-color: transparent !important;
+            box-shadow: 0 0 20px var(--glow-v);
+        }
+
+        .day-tab:focus {
+            outline: none;
+        }
+
+        .day-tab:focus-visible {
+            outline: 2px solid var(--accent);
+            outline-offset: 2px;
+        }
+
+        .schedule-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+            gap: 1rem;
+            overflow-y: auto;
+            padding-bottom: 4rem;
+        }
+
+        /* Schedule Modal Cards */
+        .sched-card {
+            background: var(--c-surface);
+            border: 1px solid var(--c-border);
+            border-radius: 1rem;
+            padding: 1.1rem;
+            cursor: pointer;
+            text-align: left;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            font-family: 'Inter', sans-serif;
+            color: #e8e6f0;
+        }
+
+        .sched-card.live {
+            border-color: rgba(124, 58, 237, 0.35);
+            background: linear-gradient(135deg, rgba(124, 58, 237, 0.07), var(--c-surface));
+        }
+
+        .sched-card.live::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, var(--accent), var(--accent-2));
+        }
+
+        .sched-card.past {
+            opacity: 0.3;
+            filter: grayscale(0.7);
+        }
+
+        .sched-card:hover {
+            border-color: rgba(124, 58, 237, 0.25);
+            transform: translateY(-4px);
+            box-shadow: 0 10px 30px -6px rgba(0, 0, 0, 0.6);
+        }
+
+        .sched-card:focus {
+            outline: none;
+        }
+
+        .sched-card:focus-visible {
+            outline: 2px solid var(--accent);
+            outline-offset: 2px;
+        }
+
+        /* ========== FOOTER ========== */
+        footer {
+            text-align: center;
+            padding: 2rem;
+            font-size: 0.72rem;
+            color: rgba(255, 255, 255, 0.18);
+            border-top: 1px solid rgba(255, 255, 255, 0.04);
+            margin-top: auto;
+        }
+
+        /* ========== FOCUS STYLES (TV/Remote) ========== */
+        :focus-visible {
+            outline: 2px solid var(--accent) !important;
+            outline-offset: 3px !important;
+        }
+
+        /* ========== CUSTOM SCROLLBAR ========== */
+        .custom-scrollbar {
+            scrollbar-width: thin;
+            scrollbar-color: rgba(124, 58, 237, 0.3) transparent;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: rgba(124, 58, 237, 0.3);
+            border-radius: 2px;
+        }
+
+        /* ========== RESPONSIVE ========== */
+        @media (max-width: 640px) {
+            .header-nav {
+                display: none;
+            }
+
+            main {
+                padding-top: 78px;
+            }
         }
     </style>
 </head>
 
-<body class="text-white">
+<body>
+    <!-- Animated Background -->
+    <div class="bg-canvas" aria-hidden="true">
+        <div class="orb orb-1"></div>
+        <div class="orb orb-2"></div>
+        <div class="orb orb-3"></div>
+    </div>
+    <div class="noise-overlay" aria-hidden="true"></div>
+
+    <!-- Header -->
+    <header class="site-header" role="banner">
+        <a href="#" class="brand">
+            <div class="brand-icon" aria-hidden="true">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5">
+                    <polygon points="23 7 16 12 23 17 23 7"></polygon>
+                    <rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect>
+                </svg>
+            </div>
+            <span class="brand-name">BhaskaraTV</span>
+        </a>
+
+        <nav class="header-nav" aria-label="Navegação principal">
+            <button class="nav-btn active">Início</button>
+            <button class="nav-btn" id="open-catalog-header">Programas</button>
+            <button class="nav-btn" id="open-full-schedule-header">Grade</button>
+        </nav>
+
+        <div class="header-right">
+            <div class="digital-clock" id="clock" aria-label="Relógio">
+                <span class="clock-dot" aria-hidden="true"></span>
+                00:00:00
+            </div>
+            <div class="live-badge" aria-label="Transmissão ao vivo">
+                <span class="live-dot" aria-hidden="true"></span>
+                Ao Vivo
+            </div>
+        </div>
+    </header>
+
     <div class="safe-area">
-        <div class="mesh-gradient"></div>
-        <div class="noise"></div>
-        <!-- Header -->
-        <header
-            class="tv-header px-8 py-6 flex justify-between items-center fixed top-0 left-0 w-full z-[100] transition-all duration-500">
-            <div class="flex items-center gap-10">
-                <div class="flex items-center">
-                    <span class="text-2xl font-black tracking-tighter uppercase italic">Bhaskara<span
-                            class="text-indigo-500 not-italic">TV</span></span>
-                </div>
+        <main>
+            <!-- ===== PLAYER SECTION ===== -->
+            <section class="player-wrapper group" aria-label="Player de vídeo">
+                <div class="player-glow-ring" aria-hidden="true"></div>
 
-                <nav class="hidden lg:flex items-center gap-8">
-                    <a href="#" class="text-[13px] font-bold text-white relative group">
-                        Início
-                        <span class="absolute -bottom-1 left-0 w-full h-0.5 bg-indigo-500 rounded-full"></span>
-                    </a>
-                    <button id="open-catalog-header"
-                        class="text-[13px] font-semibold opacity-40 hover:opacity-100 transition-all hover:translate-y-[-1px]">Programas</button>
-                    <button id="open-full-schedule-header"
-                        class="text-[13px] font-semibold opacity-40 hover:opacity-100 transition-all hover:translate-y-[-1px]">Grade
-                        Semanal</button>
-                </nav>
-            </div>
-
-            <div class="flex items-center gap-6">
-                <!-- Minimize Button (Always in Fullscreen) -->
-                <button id="btn-exit-fullscreen"
-                    class="hidden glass p-3 rounded-full hover:bg-white/10 transition-all border-white/20">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24"
-                        stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
-                    </svg>
-                </button>
-
-                <div id="clock"
-                    class="digital-clock text-sm font-bold px-5 py-2 rounded-2xl border border-white/5 flex items-center gap-2">
-                    <span class="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse"></span>
-                    00:00:00
-                </div>
-                <div class="live-tag flex items-center gap-2 px-4 py-2 rounded-2xl">
-                    <div class="relative flex h-2 w-2">
-                        <span
-                            class="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
-                        <span class="relative inline-flex rounded-full h-2 w-2 bg-white"></span>
-                    </div>
-                    <span class="text-[11px] font-black uppercase tracking-[0.2em]">Ao Vivo</span>
-                </div>
-            </div>
-        </header>
-
-        <main class="pt-[100px] flex-grow container mx-auto px-4 py-8 lg:px-8 max-w-6xl">
-            <!-- Player Section -->
-            <section class="relative group">
-                <div id="player-container"
-                    class="tv-screen bg-black rounded-2xl border border-white/10 shadow-2xl overflow-hidden">
+                <div id="player-container">
                     <!-- Ambient Light -->
-                    <div id="ambient-light"></div>
+                    <div id="ambient-light" aria-hidden="true"></div>
 
-                    <!-- Fullscreen Overlay (Only visible in fullscreen) -->
-                    <div class="fullscreen-ui">
-                        <div class="flex items-center">
-                            <span
-                                class="text-2xl font-black tracking-tighter uppercase italic text-white drop-shadow-lg">Bhaskara<span
-                                    class="text-indigo-500 not-italic">TV</span></span>
-                        </div>
-                        <button id="btn-minimize-fullscreen"
-                            class="glass p-3 rounded-full hover:bg-white/10 transition-all border-white/20">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-white" fill="none"
-                                viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    <!-- Fullscreen overlay (brandmark + exit button) -->
+                    <div class="fullscreen-ui" aria-hidden="true">
+                        <span class="fs-brand">Bhaskara<span style="color: var(--accent);">TV</span></span>
+                        <button id="btn-minimize-fullscreen" class="ctrl-btn" title="Sair da tela cheia"
+                            aria-label="Sair da tela cheia">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round"
                                     d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
                             </svg>
                         </button>
                     </div>
 
-                    <!-- Video Layers for Gapless Playback -->
-                    <video id="tv-player" class="active-video w-full h-full object-cover absolute inset-0"
-                        style="z-index: 10;" muted playsinline>
+                    <!-- Video elements -->
+                    <video id="tv-player" class="absolute inset-0 w-full h-full object-cover" style="z-index:10;" muted
+                        playsinline aria-label="Vídeo principal">
                         Seu navegador não suporta vídeos HTML5.
                     </video>
                     <video id="next-player"
-                        class="w-full h-full object-cover absolute inset-0 opacity-0 pointer-events-none"
-                        style="z-index: 5;" muted playsinline preload="auto">
-                    </video>
+                        class="absolute inset-0 w-full h-full object-cover opacity-0 pointer-events-none"
+                        style="z-index:5;" muted playsinline preload="auto"></video>
 
-                    <!-- Color Sampler for Ambilight -->
-                    <canvas id="color-sampler" class="hidden" style="pointer-events: none;"></canvas>
+                    <!-- Canvas for Ambilight -->
+                    <canvas id="color-sampler" class="hidden" style="pointer-events:none;" aria-hidden="true"></canvas>
 
                     <!-- Watermark -->
-                    <div class="watermark">
-                        <img src="logo.png" alt="Logo" class="w-8 h-8 opacity-80">
-                        <span class="text-white font-bold tracking-tighter text-xl">TV</span>
+                    <div class="watermark" aria-hidden="true">
+                        <img src="logo.png" alt="">
+                        <span>TV</span>
                     </div>
 
-                    <!-- Fallback Screen (Hidden by default) -->
-                    <div id="fallback-screen"
-                        class="absolute inset-0 no-signal hidden text-center flex items-center justify-center"></div>
+                    <!-- Fallback / No Signal -->
+                    <div id="fallback-screen" class="absolute inset-0 no-signal hidden flex items-center justify-center"
+                        style="z-index:8;" role="status" aria-label="Sem sinal"></div>
 
-                    <!-- Coming Up Next Notification -->
-                    <div id="next-toast"
-                        class="coming-next-toast glass p-4 rounded-xl flex items-center gap-4 border-l-4 border-l-indigo-500">
-                        <div class="w-12 h-12 bg-indigo-500/20 rounded-lg flex items-center justify-center">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-indigo-400" fill="none"
-                                viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M13 5l7 7-7 7M5 5l7 7-7 7" />
+                    <!-- Coming Up Next Toast -->
+                    <div id="next-toast" class="coming-next-toast" role="status" aria-live="polite">
+                        <div class="toast-icon" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M13 5l7 7-7 7M5 5l7 7-7 7" />
                             </svg>
                         </div>
                         <div>
-                            <p class="text-[10px] uppercase tracking-widest text-indigo-400 font-bold mb-1">A seguir</p>
-                            <h4 id="next-title" class="text-sm font-bold">Nome do Próximo Programa</h4>
+                            <div class="toast-label">A seguir</div>
+                            <div id="next-title">—</div>
                         </div>
                     </div>
 
-                    <!-- Overlay Info -->
-                    <div id="video-overlay" class="absolute top-6 left-6 pointer-events-none" style="z-index: 100;">
-                        <div class="glass px-4 py-2 rounded-lg inline-block border-l-2 border-indigo-500">
-                            <p id="current-title"
-                                class="text-xs font-bold text-indigo-400 uppercase tracking-widest mb-1">
-                                PROGRAMA ATUAL</p>
-                            <p id="current-program-display" class="text-lg font-bold">Carregando...</p>
+                    <!-- Program Info Overlay (top left) -->
+                    <div id="video-overlay" aria-live="polite">
+                        <div class="overlay-pill">
+                            <span id="current-title">PROGRAMA ATUAL</span>
+                            <span id="current-program-display">Carregando...</span>
                         </div>
                     </div>
 
-                    <!-- Custom Controls Overlay -->
-                    <div class="custom-controls absolute bottom-0 left-0 right-0 p-8 bg-gradient-to-t from-black/90 via-black/40 to-transparent opacity-0 flex justify-between items-end"
-                        style="z-index: 40;">
-                        <div class="flex flex-col gap-1">
-                            <h2 id="control-title" class="text-2xl font-bold tracking-tight">Título do Programa</h2>
-                            <p id="control-time" class="text-sm opacity-60">00:00 - 00:00</p>
+                    <!-- Custom Controls (bottom bar) -->
+                    <div class="custom-controls" role="toolbar" aria-label="Controles do player">
+                        <div>
+                            <div class="ctrl-title" id="control-title">Título do Programa</div>
+                            <div class="ctrl-time" id="control-time">00:00 — 00:00</div>
                         </div>
 
-                        <div class="flex items-center gap-6">
-                            <!-- Volume Slider -->
-                            <div
-                                class="flex items-center gap-3 bg-white/5 py-2 px-4 rounded-full border border-white/10">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 opacity-50" fill="none"
-                                    viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        <div style="display:flex;align-items:center;gap:0.75rem;">
+                            <!-- Volume -->
+                            <div class="volume-wrap">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round"
                                         d="M15.536 8.464a5 5 0 010 7.072M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
                                 </svg>
                                 <input type="range" id="volume-slider" min="0" max="1" step="0.05" value="1"
-                                    class="w-20 cursor-pointer">
+                                    aria-label="Volume">
                             </div>
 
-                            <div class="flex items-center gap-4">
-                                <button id="toggle-pip"
-                                    class="bg-white/5 hover:bg-white/10 p-3 rounded-full border border-white/10 shadow-lg transition-all active:scale-95 group"
-                                    title="Picture in Picture">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 opacity-80" fill="none"
-                                        viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                                    </svg>
-                                </button>
-                                <button id="toggle-fullscreen"
-                                    class="bg-white/5 hover:bg-white/10 p-3 rounded-full border border-white/10 shadow-lg transition-all active:scale-95 group">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 opacity-80" fill="none"
-                                        viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
-                                    </svg>
-                                </button>
-                                <button id="toggle-mute"
-                                    class="bg-indigo-600 hover:bg-indigo-500 p-3 rounded-full shadow-lg transition-all active:scale-95 group">
-                                    <svg id="mute-icon" xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none"
-                                        viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
-                                        <path id="volume-path" stroke-linecap="round" stroke-linejoin="round"
-                                            stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H13" />
-                                    </svg>
-                                </button>
-                            </div>
+                            <!-- PiP -->
+                            <button id="toggle-pip" class="ctrl-btn" title="Picture in Picture" aria-label="PiP">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                        d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                                </svg>
+                            </button>
+
+                            <!-- Fullscreen -->
+                            <button id="toggle-fullscreen" class="ctrl-btn" title="Tela cheia" aria-label="Tela cheia">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                        d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
+                                </svg>
+                            </button>
+
+                            <!-- Mute -->
+                            <button id="toggle-mute" class="ctrl-btn ctrl-btn-primary" title="Mudo"
+                                aria-label="Ativar/desativar mudo">
+                                <svg id="mute-icon" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                        d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
+                                    <path id="volume-path" stroke-linecap="round" stroke-linejoin="round"
+                                        stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H13" />
+                                </svg>
+                            </button>
                         </div>
                     </div>
 
-                    <!-- Big Play/Unmute Button (for browser autoplay policy) -->
-                    <div id="unmute-overlay"
-                        class="absolute inset-0 flex items-center justify-center bg-black/40 backdrop-blur-sm cursor-pointer"
-                        style="z-index: 50;">
-                        <div class="text-center">
-                            <div
-                                class="w-20 h-20 bg-indigo-600 rounded-full flex items-center justify-center mx-auto mb-4 hover:scale-110 transition-transform shadow-xl shadow-indigo-500/40">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10" fill="none"
-                                    viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    <!-- Unmute Overlay -->
+                    <div id="unmute-overlay" style="z-index:50;" role="button" aria-label="Clique para ativar o som"
+                        tabindex="0">
+                        <div class="unmute-btn">
+                            <div class="unmute-icon" aria-hidden="true">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round"
                                         d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
                                 </svg>
                             </div>
-                            <p class="text-lg font-bold">Clique para ativar o som</p>
+                            <span class="unmute-label">Clique para ativar o som</span>
                         </div>
                     </div>
                 </div>
             </section>
 
-            <!-- Program Guide Section -->
-            <section class="mt-12">
-                <div class="flex items-center justify-between mb-6">
-                    <h3 class="text-2xl font-bold">Guia de Programação</h3>
-                    <div id="current-day" class="text-sm font-medium opacity-50 uppercase tracking-widest">Segunda-feira
-                    </div>
+            <!-- ===== PROGRAM GUIDE ===== -->
+            <section aria-label="Guia de programação">
+                <div class="section-header">
+                    <h2 class="section-title">
+                        <span class="section-title-accent" aria-hidden="true"></span>
+                        Guia de Programação
+                    </h2>
+                    <div id="current-day" aria-live="polite">Segunda-feira</div>
                 </div>
 
-                <div id="schedule-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    <!-- Program cards will be injected here -->
-                    <div class="animate-pulse glass p-4 rounded-xl h-24"></div>
-                    <div class="animate-pulse glass p-4 rounded-xl h-24"></div>
-                    <div class="animate-pulse glass p-4 rounded-xl h-24"></div>
+                <div id="schedule-list" role="list" aria-label="Lista de programas">
+                    <!-- Loading skeletons -->
+                    <div class="skeleton" style="height:110px;" role="status" aria-label="Carregando..."></div>
+                    <div class="skeleton" style="height:110px;"></div>
+                    <div class="skeleton" style="height:110px;"></div>
                 </div>
             </section>
         </main>
 
-        <footer class="p-8 text-center text-sm opacity-40">
-            &copy; 2024 Bhaskara TV - Sistema de Transmissão Linear
+        <footer>
+            <p>© 2025 Bhaskara TV &mdash; Canal Linear de Entretenimento</p>
         </footer>
+    </div>
 
-        <!-- Catalog Modal -->
-        <div id="catalog-modal"
-            class="fixed inset-0 z-[100] bg-indigo-950/40 backdrop-blur-[100px] flex items-center justify-center opacity-0 pointer-events-none transition-all duration-500">
-            <div class="w-full h-full max-w-[1600px] max-h-[90vh] flex flex-col p-8 md:p-16">
-                <div class="flex justify-between items-start mb-16 px-4">
-                    <div class="reveal-node">
-                        <span class="text-indigo-400 font-bold tracking-[0.3em] uppercase text-xs mb-4 block">Original
-                            BH-TV</span>
-                        <h2 class="text-4xl font-black mb-2 tracking-tighter">Nosso <span
-                                class="text-indigo-500">Catálogo</span></h2>
-                        <p class="text-xl opacity-40 font-medium max-w-2xl leading-relaxed">Os melhores programas e
-                            conteúdos exclusivos, agora integrados na nossa programação linear diária.</p>
-                    </div>
-                    <button id="close-catalog"
-                        class="w-16 h-16 rounded-3xl glass flex items-center justify-center hover:bg-white/10 transition-all hover:rotate-90 active:scale-95">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24"
-                            stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M6 18L18 6M6 6l12 12" />
-                        </svg>
-                    </button>
+    <!-- ===== CATALOG MODAL ===== -->
+    <div id="catalog-modal" class="modal-backdrop" role="dialog" aria-modal="true" aria-label="Catálogo de programas">
+        <div class="modal-inner">
+            <div class="modal-header">
+                <div class="reveal-node">
+                    <div class="modal-eyebrow">Original BH-TV</div>
+                    <h2 class="modal-title">Nosso <span
+                            style="background:linear-gradient(135deg,var(--accent),var(--accent-2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">Catálogo</span>
+                    </h2>
+                    <p class="modal-subtitle">Os melhores programas e conteúdos exclusivos da grade.</p>
                 </div>
-
-                <div
-                    class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 overflow-y-auto px-12 pb-32 custom-scrollbar">
-                    <!-- Dynamic Content -->
-                </div>
+                <button id="close-catalog" class="modal-close" aria-label="Fechar catálogo">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+            <div class="catalog-grid custom-scrollbar">
+                <!-- dynamic content -->
             </div>
         </div>
+    </div>
 
-        <!-- Full Schedule Modal -->
-        <div id="full-schedule-modal"
-            class="fixed inset-0 z-[100] bg-indigo-950/40 backdrop-blur-[100px] flex items-center justify-center opacity-0 pointer-events-none transition-all duration-500">
-            <div class="w-full h-full max-w-[1600px] max-h-[95vh] flex flex-col p-6 md:p-10">
-                <div class="flex justify-between items-start mb-12 px-4">
-                    <div class="reveal-node">
-                        <span class="text-indigo-400 font-bold tracking-[0.3em] uppercase text-xs mb-4 block">Guia de
-                            Programação</span>
-                        <h2 class="text-4xl font-black mb-2 tracking-tighter">Grade <span
-                                class="text-indigo-500">Completa</span></h2>
-                        <p id="full-schedule-week-range"
-                            class="text-lg opacity-60 font-medium max-w-2xl text-indigo-200/50">Carregando período...
-                        </p>
-                    </div>
-                    <button id="close-full-schedule"
-                        class="w-16 h-16 rounded-3xl glass flex items-center justify-center hover:bg-white/10 transition-all hover:rotate-90 active:scale-95">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24"
-                            stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M6 18L18 6M6 6l12 12" />
-                        </svg>
-                    </button>
+    <!-- ===== FULL SCHEDULE MODAL ===== -->
+    <div id="full-schedule-modal" class="modal-backdrop" role="dialog" aria-modal="true" aria-label="Grade semanal">
+        <div class="modal-inner">
+            <div class="modal-header">
+                <div class="reveal-node">
+                    <div class="modal-eyebrow">Guia de Programação</div>
+                    <h2 class="modal-title">Grade <span
+                            style="background:linear-gradient(135deg,var(--accent),var(--accent-2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">Completa</span>
+                    </h2>
+                    <p class="modal-subtitle" id="full-schedule-week-range">Carregando período...</p>
                 </div>
+                <button id="close-full-schedule" class="modal-close" aria-label="Fechar grade semanal">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
 
-                <!-- Tabs Dias da Semana -->
-                <div class="flex gap-3 mb-6 overflow-x-auto pb-4 px-4 scrollbar-hide shrink-0" id="full-schedule-tabs">
-                    <button data-day="0" class="day-tab">Domingo</button>
-                    <button data-day="1" class="day-tab">Segunda</button>
-                    <button data-day="2" class="day-tab">Terça</button>
-                    <button data-day="3" class="day-tab">Quarta</button>
-                    <button data-day="4" class="day-tab">Quinta</button>
-                    <button data-day="5" class="day-tab">Sexta</button>
-                    <button data-day="6" class="day-tab">Sábado</button>
-                </div>
+            <div class="day-tabs-wrap" id="full-schedule-tabs" role="tablist">
+                <button data-day="0" class="day-tab" role="tab">Domingo</button>
+                <button data-day="1" class="day-tab" role="tab">Segunda</button>
+                <button data-day="2" class="day-tab" role="tab">Terça</button>
+                <button data-day="3" class="day-tab" role="tab">Quarta</button>
+                <button data-day="4" class="day-tab" role="tab">Quinta</button>
+                <button data-day="5" class="day-tab" role="tab">Sexta</button>
+                <button data-day="6" class="day-tab" role="tab">Sábado</button>
+            </div>
 
-                <!-- Lista de Programação Central -->
-                <div id="full-schedule-content"
-                    class="flex-grow overflow-y-auto px-12 custom-scrollbar grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 pb-32">
-                    <!-- Cards de programação renderizados via JS -->
-                </div>
+            <div id="full-schedule-content" class="schedule-grid custom-scrollbar" role="tabpanel">
+                <!-- dynamic content -->
             </div>
         </div>
+    </div>
 
-    </div> <!-- End Safe Area -->
-
-    <script src="app.js?v=2.6"></script>
+    <script src="app.js?v=3.0"></script>
     <script>
+        // Modal open/close via class (replaces opacity-0/pointer-events-none with .open class)
+        // Patch: map old classList calls to new .open toggling
+        const _origAdd = DOMTokenList.prototype.add;
+        const _origRemove = DOMTokenList.prototype.remove;
+
+        // Modals now use .open class; patch the JS that uses opacity-0 / pointer-events-none
+        document.querySelectorAll('.modal-backdrop').forEach(modal => {
+            const observer = new MutationObserver(() => {
+                if (modal.classList.contains('opacity-0')) {
+                    modal.classList.remove('open');
+                } else if (!modal.classList.contains('opacity-0') && !modal.classList.contains('open')) {
+                    modal.classList.add('open');
+                }
+            });
+            observer.observe(modal, { attributes: true, attributeFilter: ['class'] });
+        });
+
         // Registrar Service Worker para PWA
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('sw.js')
-                    .then(reg => console.log('PWA: Ativo'))
-                    .catch(err => console.log('PWA Erro:', err));
+                    .then(() => console.log('PWA: Service Worker ativo'))
+                    .catch(err => console.warn('PWA Erro:', err));
             });
         }
-
-        // Bloquear scroll acidental em TVs
-        window.addEventListener('keydown', (e) => {
-            if (["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"].indexOf(e.code) > -1) {
-                // Permitir navegação mas evitar comportamento padrão se necessário
-            }
-        });
     </script>
 </body>
 

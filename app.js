@@ -116,27 +116,21 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function renderCatalog(catalogItems) {
-        const catalogContainer = document.querySelector('#catalog-modal .grid');
+        const catalogContainer = document.querySelector('#catalog-modal .catalog-grid');
         if (!catalogContainer) return;
 
         if (catalogItems.length === 0) {
-            catalogContainer.innerHTML = '<div class="col-span-full text-center py-20 opacity-30">Nenhum destaque disponível no momento.</div>';
+            catalogContainer.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:5rem 0;opacity:0.3;">Nenhum destaque disponível no momento.</div>';
             return;
         }
 
         catalogContainer.innerHTML = catalogItems.map(item => `
-            <div class="modal-card glass rounded-3xl overflow-hidden border border-white/10 bg-white/5">
-                <div class="h-56 bg-cover bg-center" style="background-image: url('${item.banner}');"></div>
-                <div class="p-6">
-                    <div class="flex justify-between items-start mb-4">
-                        <h3 class="text-2xl font-bold">${item.title}</h3>
-                        <span class="px-3 py-1 bg-indigo-500/20 text-indigo-400 text-[10px] font-bold rounded-full border border-indigo-500/30 uppercase tracking-widest">${item.type}</span>
-                    </div>
-                    <p class="text-sm opacity-60 leading-relaxed mb-6">${item.description}</p>
-                    <div class="flex items-center gap-2 text-xs font-bold text-indigo-400 group cursor-default">
-                        <span class="w-2 h-2 rounded-full bg-indigo-500"></span>
-                        DISPONÍVEL NA GRADE
-                    </div>
+            <div class="modal-card reveal-node">
+                <div class="modal-card-banner" style="background-image: url('${item.banner}');"></div>
+                <div class="modal-card-body">
+                    <span class="modal-card-type">${item.type}</span>
+                    <h3 class="modal-card-title">${item.title}</h3>
+                    <p class="modal-card-desc">${item.description}</p>
                 </div>
             </div>
         `).join('');
@@ -546,39 +540,32 @@ document.addEventListener('DOMContentLoaded', () => {
             const isNext = index === liveIndex + 1;
 
             const card = document.createElement('div');
-            card.className = `program-card glass p-5 rounded-2xl border ${isLive ? 'live border-indigo-500/50 scale-[1.02]' : 'border-white/5'} ${isPast ? 'past' : ''}`;
+            card.className = `program-card${isLive ? ' live' : ''}${isPast ? ' past' : ''}`;
+            card.setAttribute('role', 'listitem');
 
-            // Calcular string de fim
             const startDate = new Date();
             startDate.setHours(startH, startM, 0);
             const endDate = new Date(startDate.getTime() + prog.duration * 60000);
             const endTimeStr = endDate.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
 
-            // Calcular porcentagem do progresso se estiver ao vivo
             let progressPercent = 0;
             if (isLive) {
                 progressPercent = ((currentTimeInSeconds - startInSeconds) / durationInSeconds) * 100;
             }
 
             card.innerHTML = `
-                <div class="flex justify-between items-start mb-3">
-                    <div class="flex flex-col gap-1">
-                        <span class="text-[10px] font-bold opacity-50 tracking-wider">${prog.startTime} - ${endTimeStr}</span>
-                        ${getBadge(prog.title)}
-                    </div>
-                    ${isLive ? '<span class="text-[9px] font-black px-2 py-1 rounded bg-red-600 text-white animate-pulse tracking-tighter">NO AR</span>' : ''}
-                    ${isNext ? '<span class="text-[9px] font-black px-2 py-1 rounded bg-indigo-600 text-white tracking-tighter">A SEGUIR</span>' : ''}
+                <div class="card-time">${prog.startTime} &mdash; ${endTimeStr}</div>
+                <div class="card-badges">
+                    ${getBadge(prog.title)}
+                    ${isLive ? '<span class="live-chip"><span class="live-chip-dot"></span>No Ar</span>' : ''}
+                    ${isNext ? '<span class="next-chip">A Seguir</span>' : ''}
                 </div>
-                <h4 class="font-bold text-white leading-tight mb-1 text-sm">${prog.title}</h4>
-                <p class="text-[10px] opacity-40 italic line-clamp-1 mb-2">${prog.description || 'Sem descrição'}</p>
-                <div class="flex items-center gap-2">
-                    <p class="text-[9px] opacity-30 font-bold uppercase tracking-widest">${prog.duration} MINUTOS</p>
+                <div class="card-title">${prog.title}</div>
+                <div class="card-desc">${prog.description || 'Sem descrição'}</div>
+                <div class="card-footer">
+                    <span class="card-duration">${prog.duration} min</span>
                 </div>
-                ${isLive ? `
-                    <div class="schedule-progress">
-                        <div class="schedule-progress-bar" style="width: ${progressPercent}%"></div>
-                    </div>
-                ` : ''}
+                ${isLive ? `<div class="schedule-progress"><div class="schedule-progress-bar" style="width:${progressPercent}%"></div></div>` : ''}
             `;
 
             scheduleList.appendChild(card);
@@ -704,46 +691,30 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // Helpers de modal (novo design usa .open)
+    function openModal(modal) { if (modal) modal.classList.add('open'); }
+    function closeModal(modal) { if (modal) modal.classList.remove('open'); }
+
     // Modal Catalog Logic
-    if (openCatalogBtn && catalogModal) {
-        openCatalogBtn.addEventListener('click', () => {
-            catalogModal.classList.remove('opacity-0', 'pointer-events-none');
-        });
-    }
-
-    if (openCatalogHeaderBtn && catalogModal) {
-        openCatalogHeaderBtn.addEventListener('click', () => {
-            catalogModal.classList.remove('opacity-0', 'pointer-events-none');
-        });
-    }
-
-    if (closeCatalogBtn && catalogModal) {
-        closeCatalogBtn.addEventListener('click', () => {
-            catalogModal.classList.add('opacity-0', 'pointer-events-none');
-        });
-    }
+    if (openCatalogBtn && catalogModal) openCatalogBtn.addEventListener('click', () => openModal(catalogModal));
+    if (openCatalogHeaderBtn && catalogModal) openCatalogHeaderBtn.addEventListener('click', () => openModal(catalogModal));
+    if (closeCatalogBtn && catalogModal) closeCatalogBtn.addEventListener('click', () => closeModal(catalogModal));
 
     // Modal Full Schedule Logic
     if (openFullScheduleBtn && fullScheduleModal) {
         openFullScheduleBtn.addEventListener('click', () => {
-            const now = new Date();
-            renderWeeklySchedule(now.getDay()); // Abre no dia atual
-            fullScheduleModal.classList.remove('opacity-0', 'pointer-events-none');
+            renderWeeklySchedule(new Date().getDay());
+            openModal(fullScheduleModal);
         });
     }
-
     if (openFullScheduleHeaderBtn && fullScheduleModal) {
         openFullScheduleHeaderBtn.addEventListener('click', () => {
-            const now = new Date();
-            renderWeeklySchedule(now.getDay()); // Abre no dia atual
-            fullScheduleModal.classList.remove('opacity-0', 'pointer-events-none');
+            renderWeeklySchedule(new Date().getDay());
+            openModal(fullScheduleModal);
         });
     }
-
     if (closeFullScheduleBtn && fullScheduleModal) {
-        closeFullScheduleBtn.addEventListener('click', () => {
-            fullScheduleModal.classList.add('opacity-0', 'pointer-events-none');
-        });
+        closeFullScheduleBtn.addEventListener('click', () => closeModal(fullScheduleModal));
     }
 
     if (fullScheduleTabs && fullScheduleModal) {
@@ -848,48 +819,32 @@ document.addEventListener('DOMContentLoaded', () => {
             const endTimeStr = endDate.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
 
             const card = document.createElement('button');
-            card.className = `program-card text-left reveal-node glass p-6 rounded-3xl border ${isLive ? 'live' : 'border-white/5'} ${isPast ? 'past' : ''} transition-all duration-300 focus:outline-none`;
+            card.className = `sched-card reveal-node${isLive ? ' live' : ''}${isPast ? ' past' : ''}`;
             card.style.animationDelay = `${index * 0.05}s`;
 
-            // Auto-scroll para foco em TVs (D-pad)
             card.addEventListener('focus', () => {
                 card.scrollIntoView({ behavior: 'smooth', block: 'center' });
             });
 
             card.innerHTML = `
-                <div class="flex justify-between items-start mb-4">
-                    <div class="flex flex-col">
-                        <span class="text-xs font-bold text-indigo-400 font-mono tracking-tighter mb-1">${prog.startTime} — ${endTimeStr}</span>
-                        <div class="flex flex-wrap items-center gap-3">
-                            ${getBadge(prog.title)}
-                            ${isLive ? '<span class="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-red-500/20 text-red-500 text-[9px] font-black uppercase tracking-widest ring-1 ring-red-500/30 animate-pulse">AO VIVO</span>' : ''}
-                        </div>
-                    </div>
+                <div class="card-time">${prog.startTime} &mdash; ${endTimeStr}</div>
+                <div class="card-badges">
+                    ${getBadge(prog.title)}
+                    ${isLive ? '<span class="live-chip"><span class="live-chip-dot"></span>Ao Vivo</span>' : ''}
                 </div>
-                
-                <h4 class="font-bold text-white text-xl leading-tight mb-2">${prog.title}</h4>
-                <p class="text-[13px] text-white/40 leading-relaxed mb-4 line-clamp-2">${prog.description || 'Nenhuma descrição disponível.'}</p>
-                
-                <div class="flex items-center justify-between pt-4 border-t border-white/5 mt-auto">
-                    <span class="text-[9px] opacity-30 font-bold uppercase tracking-widest">${prog.duration} MINUTOS</span>
-                    <div class="w-8 h-8 rounded-full border border-white/5 bg-white/5 flex items-center justify-center text-[10px] font-bold opacity-30 text-indigo-400">TV</div>
+                <div class="card-title" style="font-size:1rem;">${prog.title}</div>
+                <div class="card-desc">${prog.description || 'Nenhuma descrição disponível.'}</div>
+                <div class="card-footer">
+                    <span class="card-duration">${prog.duration} min</span>
                 </div>
             `;
             fullScheduleContent.appendChild(card);
         });
     }
 
-    if (catalogModal) {
-        catalogModal.addEventListener('click', (e) => {
-            if (e.target === catalogModal) catalogModal.classList.add('opacity-0', 'pointer-events-none');
-        });
-    }
-
-    if (fullScheduleModal) {
-        fullScheduleModal.addEventListener('click', (e) => {
-            if (e.target === fullScheduleModal) fullScheduleModal.classList.add('opacity-0', 'pointer-events-none');
-        });
-    }
+    // Fechar modais ao clicar no backdrop
+    if (catalogModal) catalogModal.addEventListener('click', e => { if (e.target === catalogModal) closeModal(catalogModal); });
+    if (fullScheduleModal) fullScheduleModal.addEventListener('click', e => { if (e.target === fullScheduleModal) closeModal(fullScheduleModal); });
 
     // Sincronizar border-radius com o estado de fullscreen
     document.addEventListener('fullscreenchange', () => {
