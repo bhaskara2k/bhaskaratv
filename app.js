@@ -629,6 +629,50 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // --- LÓGICA DE AUTO-HIDE EM FULLSCREEN ---
+    let fsIdleTimer = null;
+    const FS_HIDE_DELAY = 5000; // 5 segundos
+
+    function showFsControls() {
+        playerContainer.removeAttribute('data-fs-hide');
+    }
+
+    function startFsHideTimer() {
+        clearTimeout(fsIdleTimer);
+        showFsControls();
+        fsIdleTimer = setTimeout(() => {
+            if (document.fullscreenElement) {
+                playerContainer.setAttribute('data-fs-hide', 'true');
+            }
+        }, FS_HIDE_DELAY);
+    }
+
+    function stopFsHideTimer() {
+        clearTimeout(fsIdleTimer);
+        showFsControls();
+    }
+
+    // Inicia o auto-hide quando entra em fullscreen, limpa quando sai
+    document.addEventListener('fullscreenchange', () => {
+        if (document.fullscreenElement === playerContainer) {
+            // Ativou fullscreen: mostra os controles e começa a contar
+            startFsHideTimer();
+            // Monitorar movimento do mouse dentro do player
+            playerContainer.addEventListener('mousemove', startFsHideTimer);
+            playerContainer.addEventListener('mousedown', startFsHideTimer);
+            playerContainer.addEventListener('touchstart', startFsHideTimer, { passive: true });
+            playerContainer.addEventListener('keydown', startFsHideTimer);
+        } else {
+            // Saiu do fullscreen: limpa tudo
+            stopFsHideTimer();
+            playerContainer.removeAttribute('data-fs-hide');
+            playerContainer.removeEventListener('mousemove', startFsHideTimer);
+            playerContainer.removeEventListener('mousedown', startFsHideTimer);
+            playerContainer.removeEventListener('touchstart', startFsHideTimer);
+            playerContainer.removeEventListener('keydown', startFsHideTimer);
+        }
+    });
+
     if (btnMinimizeFullscreen) {
         btnMinimizeFullscreen.addEventListener('click', () => {
             if (document.exitFullscreen) document.exitFullscreen();
@@ -830,7 +874,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Handle ESC key or other ways to exit fullscreen to sync UI if needed
+    // Sincronizar border-radius com o estado de fullscreen
     document.addEventListener('fullscreenchange', () => {
         if (document.fullscreenElement) {
             playerContainer.classList.add('rounded-none');
@@ -895,36 +939,6 @@ document.addEventListener('DOMContentLoaded', () => {
             if (active && active.click) active.click();
         }
     });
-
-    // --- LÓGICA DE AUTO-HIDE (INATIVIDADE) ---
-    let idleTimer;
-    const hideDelay = 3000;
-    const rootNode = document.documentElement;
-
-    function resetIdleTimer() {
-        // Remover sinal de inatividade
-        rootNode.setAttribute('data-ui-hide', 'false');
-
-        clearTimeout(idleTimer);
-
-        idleTimer = setTimeout(() => {
-            // Só esconde se o mouse não estiver em cima de algum modal ou menu
-            const isMenuOpen = (catalogModal && !catalogModal.classList.contains('opacity-0')) ||
-                (fullScheduleModal && !fullScheduleModal.classList.contains('opacity-0'));
-
-            if (!isMenuOpen) {
-                rootNode.setAttribute('data-ui-hide', 'true');
-            }
-        }, hideDelay);
-    }
-
-    // Monitorar em múltiplos níveis para garantir captura total (TV e PC)
-    ['mousemove', 'mousedown', 'keydown', 'touchstart', 'scroll', 'click'].forEach(evt => {
-        document.addEventListener(evt, resetIdleTimer, { passive: true });
-    });
-
-    // Iniciar timer
-    resetIdleTimer();
 
     init();
 });

@@ -163,12 +163,39 @@
         }
 
         .custom-controls {
-            transition: transform 0.8s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.8s ease;
+            transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.6s ease, visibility 0.6s ease;
             transform: translateY(0);
             z-index: 100 !important;
             pointer-events: auto;
-            opacity: 1;
-            /* Visível por padrão se não estiver inativo */
+            opacity: 0;
+            visibility: hidden;
+        }
+
+        /* Fora do fullscreen: mostrar no hover do grupo (.group) */
+        :not(:fullscreen) .group:hover .custom-controls {
+            opacity: 1 !important;
+            visibility: visible !important;
+        }
+
+        /* Dentro do fullscreen: sempre visível por padrão */
+        :fullscreen .custom-controls {
+            opacity: 1 !important;
+            visibility: visible !important;
+        }
+
+        /* Quando data-fs-hide está ativo (após 5s sem atividade no fullscreen) */
+        [data-fs-hide="true"] .custom-controls,
+        [data-fs-hide="true"] .fullscreen-ui,
+        [data-fs-hide="true"] .watermark,
+        [data-fs-hide="true"] #video-overlay {
+            opacity: 0 !important;
+            visibility: hidden !important;
+            pointer-events: none !important;
+        }
+
+        [data-fs-hide="true"],
+        [data-fs-hide="true"] * {
+            cursor: none !important;
         }
 
         .coming-next-toast {
@@ -498,30 +525,15 @@
             border-radius: 0 !important;
         }
 
-        /* NUCLEAR AUTO-HIDE LOGIC (Highest Priority) */
-        html[data-ui-hide="true"],
-        html[data-ui-hide="true"] * {
-            cursor: none !important;
-        }
-
-        html[data-ui-hide="true"] .fullscreen-ui,
-        html[data-ui-hide="true"] .custom-controls,
-        html[data-ui-hide="true"] .coming-next-toast,
-        html[data-ui-hide="true"] #video-overlay,
-        html[data-ui-hide="true"] .tv-header,
-        html[data-ui-hide="true"] .watermark {
-            opacity: 0 !important;
-            visibility: hidden !important;
-            pointer-events: none !important;
-            transform: translateY(10px);
-        }
+        /* O sistema de auto-hide agora usa [data-fs-hide] no #player-container */
+        /* Ver regras .custom-controls acima */
 
         .tv-header,
         .custom-controls,
         .coming-next-toast,
         #video-overlay,
         .fullscreen-ui {
-            transition: opacity 0.8s ease, visibility 0.8s ease, transform 0.8s ease !important;
+            transition: opacity 0.6s ease, visibility 0.6s ease, transform 0.6s ease !important;
         }
     </style>
 </head>
