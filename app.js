@@ -18,10 +18,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const nextTitle = document.getElementById('next-title');
     const ambientLight = document.getElementById('ambient-light');
     const catalogModal = document.getElementById('catalog-modal');
-    const openCatalogBtn = document.getElementById('open-catalog');
+    // Usa o botão da página se existir, senão usa o do header (novo design)
+    const openCatalogBtn = document.getElementById('open-catalog') || document.getElementById('open-catalog-header');
     const closeCatalogBtn = document.getElementById('close-catalog');
     const fullScheduleModal = document.getElementById('full-schedule-modal');
-    const openFullScheduleBtn = document.getElementById('open-full-schedule');
+    const openFullScheduleBtn = document.getElementById('open-full-schedule') || document.getElementById('open-full-schedule-header');
     const closeFullScheduleBtn = document.getElementById('close-full-schedule');
     const fullScheduleTabs = document.getElementById('full-schedule-tabs');
     const fullScheduleContent = document.getElementById('full-schedule-content');
@@ -31,8 +32,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const colorSampler = document.getElementById('color-sampler');
     const ctxSampler = colorSampler ? colorSampler.getContext('2d', { willReadFrequently: true }) : null;
     const btnMinimizeFullscreen = document.getElementById('btn-minimize-fullscreen');
-    const openCatalogHeaderBtn = document.getElementById('open-catalog-header');
-    const openFullScheduleHeaderBtn = document.getElementById('open-full-schedule-header');
+    // openCatalogHeaderBtn e openFullScheduleHeaderBtn apontam para os mesmos botões do header
+    const openCatalogHeaderBtn = openCatalogBtn;
+    const openFullScheduleHeaderBtn = openFullScheduleBtn;
 
     // Safe check for critical elements
     if (!videoPlayer || !scheduleList || !currentTitle) {
