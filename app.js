@@ -630,12 +630,12 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // --- LÓGICA DE AUTO-HIDE EM FULLSCREEN ---
-    // Aplicamos a classe 'fs-hidden' diretamente nos elementos alvo
-    // para evitar problemas de especificidade CSS com :fullscreen
-    let fsIdleTimer = null;
-    const FS_HIDE_DELAY = 5000; // 5 segundos
+    // Usa polling (setInterval) + timestamp de última atividade.
+    // Mais confiável que eventos em fullscreen, que variam entre navegadores e TVs.
+    const FS_HIDE_DELAY = 5000;
+    let lastActivityTime = Date.now();
+    let fsControlsVisible = true;
 
-    // Elementos que devem sumir quando o usuário ficar inativo em fullscreen
     const fsHideTargets = [
         document.querySelector('.custom-controls'),
         document.querySelector('.fullscreen-ui'),
@@ -645,47 +645,48 @@ document.addEventListener('DOMContentLoaded', () => {
     ].filter(Boolean);
 
     function showFsControls() {
-        fsHideTargets.forEach(el => el.classList.remove('fs-hidden'));
-        playerContainer.style.cursor = '';
+        if (!fsControlsVisible) {
+            fsHideTargets.forEach(el => el.classList.remove('fs-hidden'));
+            playerContainer.style.cursor = '';
+            fsControlsVisible = true;
+        }
     }
 
     function hideFsControls() {
-        fsHideTargets.forEach(el => el.classList.add('fs-hidden'));
-        playerContainer.style.cursor = 'none';
+        if (fsControlsVisible) {
+            fsHideTargets.forEach(el => el.classList.add('fs-hidden'));
+            playerContainer.style.cursor = 'none';
+            fsControlsVisible = false;
+        }
     }
 
-    function startFsHideTimer() {
-        clearTimeout(fsIdleTimer);
-        showFsControls();
-        fsIdleTimer = setTimeout(() => {
-            if (document.fullscreenElement) {
-                hideFsControls();
-            }
-        }, FS_HIDE_DELAY);
-    }
-
-    function stopFsHideTimer() {
-        clearTimeout(fsIdleTimer);
+    function onUserActivity() {
+        lastActivityTime = Date.now();
         showFsControls();
     }
 
-    // Inicia o auto-hide quando entra em fullscreen, limpa quando sai
+    // Registra atividade em qualquer interação: mouse, toque ou teclado
+    ['mousemove', 'mousedown', 'click', 'touchstart', 'touchmove', 'keydown'].forEach(evt => {
+        document.addEventListener(evt, onUserActivity, { passive: true });
+    });
+
+    // Polling: a cada 500ms verifica se está inativo em fullscreen
+    setInterval(() => {
+        if (!document.fullscreenElement) {
+            showFsControls();
+            return;
+        }
+        if (Date.now() - lastActivityTime >= FS_HIDE_DELAY) {
+            hideFsControls();
+        }
+    }, 500);
+
+    // Ao entrar em fullscreen: reseta atividade para iniciar o timer do zero
     document.addEventListener('fullscreenchange', () => {
         if (document.fullscreenElement === playerContainer) {
-            // Ativou fullscreen: mostra os controles e começa a contar
-            startFsHideTimer();
-            // Monitorar qualquer interação dentro do player
-            playerContainer.addEventListener('mousemove', startFsHideTimer);
-            playerContainer.addEventListener('mousedown', startFsHideTimer);
-            playerContainer.addEventListener('touchstart', startFsHideTimer, { passive: true });
-            document.addEventListener('keydown', startFsHideTimer);
+            onUserActivity();
         } else {
-            // Saiu do fullscreen: limpa tudo
-            stopFsHideTimer();
-            playerContainer.removeEventListener('mousemove', startFsHideTimer);
-            playerContainer.removeEventListener('mousedown', startFsHideTimer);
-            playerContainer.removeEventListener('touchstart', startFsHideTimer);
-            document.removeEventListener('keydown', startFsHideTimer);
+            showFsControls();
         }
     });
 
