@@ -163,40 +163,34 @@
         }
 
         .custom-controls {
-            transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.6s ease, visibility 0.6s ease;
-            transform: translateY(0);
+            transition: opacity 0.6s ease, visibility 0.6s ease;
             z-index: 100 !important;
             pointer-events: auto;
             opacity: 0;
             visibility: hidden;
         }
 
-        /* Fora do fullscreen: mostrar no hover do grupo (.group) */
+        /* Fora do fullscreen: aparecer no hover do grupo pai */
         :not(:fullscreen) .group:hover .custom-controls {
-            opacity: 1 !important;
-            visibility: visible !important;
+            opacity: 1;
+            visibility: visible;
         }
 
-        /* Dentro do fullscreen: sempre visível por padrão */
+        /* Dentro do fullscreen: visível por padrão (JS controla o hide) */
         :fullscreen .custom-controls {
-            opacity: 1 !important;
-            visibility: visible !important;
+            opacity: 1;
+            visibility: visible;
         }
 
-        /* Quando data-fs-hide está ativo (após 5s sem atividade no fullscreen) */
-        [data-fs-hide="true"] .custom-controls,
-        [data-fs-hide="true"] .fullscreen-ui,
-        [data-fs-hide="true"] .watermark,
-        [data-fs-hide="true"] #video-overlay {
+        /* Classe aplicada diretamente pelo JS nos elementos alvo.
+           Usa !important para sobrescrever qualquer regra :fullscreen */
+        .fs-hidden {
             opacity: 0 !important;
             visibility: hidden !important;
             pointer-events: none !important;
+            transition: opacity 0.6s ease, visibility 0.6s ease !important;
         }
 
-        [data-fs-hide="true"],
-        [data-fs-hide="true"] * {
-            cursor: none !important;
-        }
 
         .coming-next-toast {
             position: absolute;

@@ -630,11 +630,28 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // --- LÓGICA DE AUTO-HIDE EM FULLSCREEN ---
+    // Aplicamos a classe 'fs-hidden' diretamente nos elementos alvo
+    // para evitar problemas de especificidade CSS com :fullscreen
     let fsIdleTimer = null;
     const FS_HIDE_DELAY = 5000; // 5 segundos
 
+    // Elementos que devem sumir quando o usuário ficar inativo em fullscreen
+    const fsHideTargets = [
+        document.querySelector('.custom-controls'),
+        document.querySelector('.fullscreen-ui'),
+        document.querySelector('.watermark'),
+        document.getElementById('video-overlay'),
+        document.getElementById('next-toast'),
+    ].filter(Boolean);
+
     function showFsControls() {
-        playerContainer.removeAttribute('data-fs-hide');
+        fsHideTargets.forEach(el => el.classList.remove('fs-hidden'));
+        playerContainer.style.cursor = '';
+    }
+
+    function hideFsControls() {
+        fsHideTargets.forEach(el => el.classList.add('fs-hidden'));
+        playerContainer.style.cursor = 'none';
     }
 
     function startFsHideTimer() {
@@ -642,7 +659,7 @@ document.addEventListener('DOMContentLoaded', () => {
         showFsControls();
         fsIdleTimer = setTimeout(() => {
             if (document.fullscreenElement) {
-                playerContainer.setAttribute('data-fs-hide', 'true');
+                hideFsControls();
             }
         }, FS_HIDE_DELAY);
     }
@@ -657,19 +674,18 @@ document.addEventListener('DOMContentLoaded', () => {
         if (document.fullscreenElement === playerContainer) {
             // Ativou fullscreen: mostra os controles e começa a contar
             startFsHideTimer();
-            // Monitorar movimento do mouse dentro do player
+            // Monitorar qualquer interação dentro do player
             playerContainer.addEventListener('mousemove', startFsHideTimer);
             playerContainer.addEventListener('mousedown', startFsHideTimer);
             playerContainer.addEventListener('touchstart', startFsHideTimer, { passive: true });
-            playerContainer.addEventListener('keydown', startFsHideTimer);
+            document.addEventListener('keydown', startFsHideTimer);
         } else {
             // Saiu do fullscreen: limpa tudo
             stopFsHideTimer();
-            playerContainer.removeAttribute('data-fs-hide');
             playerContainer.removeEventListener('mousemove', startFsHideTimer);
             playerContainer.removeEventListener('mousedown', startFsHideTimer);
             playerContainer.removeEventListener('touchstart', startFsHideTimer);
-            playerContainer.removeEventListener('keydown', startFsHideTimer);
+            document.removeEventListener('keydown', startFsHideTimer);
         }
     });
 
